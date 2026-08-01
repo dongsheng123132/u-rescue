@@ -1,0 +1,68 @@
+{
+  "id": "codex.wsl.nvm-path-missing",
+  "tool": "codex",
+  "title": "自己开终端一切正常，Codex 里却说 node / pnpm 找不到",
+  "symptoms": [
+    "同一台机器同一个项目，自己开 WSL 终端跑得好好的",
+    "Codex 里执行命令报 command not found: node",
+    "pnpm、corepack、yarn 也一样找不到"
+  ],
+  "errors": [
+    "command not found: node",
+    "command not found: pnpm",
+    "zsh: command not found"
+  ],
+  "platforms": [
+    "wsl",
+    "linux",
+    "macos"
+  ],
+  "severity": "blocker",
+  "cause": "nvm 不是把 node 装到固定路径，而是靠 shell 启动脚本（.bashrc / .zshrc）在**交互式**会话里临时改 PATH。Codex 执行命令时开的是非交互、非登录 shell，根本不加载这些启动脚本，于是 PATH 里没有 nvm 管理的 node。这就是「我自己敲能跑，AI 敲就不行」的最常见根因，和权限、沙箱都没关系。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "临时验证（在 Codex 里让它执行这几行，如果之后 node 就有了，说明确诊）：",
+        "cmd": "export NVM_DIR=\"$HOME/.nvm\"; . \"$NVM_DIR/nvm.sh\"; node -v",
+        "shell": "bash",
+        "risk": "read-only"
+      },
+      {
+        "desc": "根治方案 A（推荐）：把当前 nvm 版本的 node 目录固定写进非交互也能读到的 PATH。先查出真实路径：",
+        "cmd": "echo \"$NVM_DIR/versions/node/$(nvm current)/bin\"",
+        "shell": "bash",
+        "risk": "read-only"
+      },
+      {
+        "desc": "把上一步的路径追加到 ~/.profile（非交互 shell 也会读的那一层），而不是只写 .bashrc/.zshrc。",
+        "cmd": "echo 'export PATH=\"$HOME/.nvm/versions/node/v22.14.0/bin:$PATH\"' >> ~/.profile",
+        "shell": "bash",
+        "risk": "low",
+        "rollback": "编辑 ~/.profile 删掉这一行即可；改前先 cp ~/.profile ~/.profile.bak。"
+      },
+      {
+        "desc": "根治方案 B：干脆不用 nvm，用系统包管理器或官方安装包把 node 装到 /usr/local/bin 这类固定位置。多人协作机器推荐这条。",
+        "risk": "medium",
+        "rollback": "卸载系统 node，恢复用 nvm 的版本。"
+      }
+    ],
+    "verify": "在 Codex 里（不是自己的终端里）执行 node -v 和 pnpm -v，都能打印版本号。",
+    "auto": false
+  },
+  "evidence": "upstream-issue",
+  "verified_on": {
+    "date": "2026-08-01",
+    "tool_version": "Codex App 26.304.1528.0",
+    "os": "Windows 11 + WSL2",
+    "note": "上游 issue 仍 open；同一机制在 macOS 上用 nvm 时表现完全一样。"
+  },
+  "sources": [
+    "https://github.com/openai/codex/issues/13566"
+  ],
+  "tags": [
+    "PATH",
+    "nvm",
+    "WSL",
+    "command not found"
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "id": "claude-code.net.self-signed-certificate",
+  "tool": "claude-code",
+  "title": "报「Self-signed certificate detected」，可是我根本没用代理",
+  "symptoms": [
+    "突然连不上，提示检测到自签名证书",
+    "家里普通宽带，没挂代理也报",
+    "昨天还好好的，什么都没改就坏了"
+  ],
+  "errors": [
+    "Unable to connect to API: Self-signed certificate detected",
+    "Check your proxy or corporate SSL certificates",
+    "SELF_SIGNED_CERT_IN_CHAIN",
+    "unable to get local issuer certificate"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "severity": "blocker",
+  "diagnose": [
+    {
+      "id": "reach",
+      "role": "evidence",
+      "kind": "http_reach",
+      "url": "https://api.anthropic.com",
+      "expect": "fail",
+      "label": "到 API 的 TLS 连接建不起来（需 --net）"
+    }
+  ],
+  "cause": "这条报错的字面意思是「TLS 链上出现了不受信任的证书」，但**说自己没用代理的人，机器上通常有个他不知道的中间人**。国内最常见的三个来源：① 杀毒软件/安全卫士开了 HTTPS 扫描（360、火绒、卡巴斯基都有这功能），它会用自签根证书重签所有 HTTPS 流量；② 梯子软件开了 TUN/系统代理模式，全局接管流量；③ 公司/学校网络的透明代理。第四种是真的没有中间人——系统根证书库过期或损坏，常见于长期没更新的 Windows 和被精简过的系统镜像。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "先定位是谁在做中间人。拿 curl 看一眼证书是谁签的（Windows 用系统自带的 curl.exe）：",
+        "cmd": "curl -v https://api.anthropic.com/ 2>&1 | findstr /i \"issuer subject\"",
+        "shell": "cmd",
+        "risk": "read-only"
+      },
+      {
+        "desc": "如果 issuer 里出现杀软/梯子的名字（如 360、Huorong、Kaspersky、Clash、Surge），就是它。到对应软件里关掉「HTTPS 扫描 / SSL 检测 / TUN 模式」，然后重开 Claude。",
+        "risk": "low",
+        "rollback": "在同一个软件里把该开关重新打开。"
+      },
+      {
+        "desc": "必须保留中间人（公司环境）时，把它的根证书导出成 .pem，让 Node 信任它。这是正规做法。",
+        "cmd": "[Environment]::SetEnvironmentVariable(\"NODE_EXTRA_CA_CERTS\", \"C:\\certs\\corp-root.pem\", \"User\")",
+        "shell": "powershell",
+        "risk": "low",
+        "rollback": "把该环境变量删掉即可。"
+      },
+      {
+        "desc": "如果 issuer 看着正常（是 Let's Encrypt / DigiCert 这类），那是本机根证书库的问题——Windows 跑一次系统更新，macOS/Linux 更新 ca-certificates 包。",
+        "risk": "low",
+        "rollback": "无需回滚。"
+      },
+      {
+        "desc": "⚠️ 网上到处流传的 NODE_TLS_REJECT_UNAUTHORIZED=0 **不要用**。它是把全局 TLS 校验关掉，等于让任何人都能中间人你的 API key。宁可连不上，也别开这个。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "重开 Claude Code 发一句话能正常收到回复；且上面那条 curl 命令看到的 issuer 是正常的公共 CA。",
+    "auto": false
+  },
+  "evidence": "upstream-issue",
+  "verified_on": {
+    "date": "2026-08-01",
+    "tool_version": "Claude Code v2.1.201",
+    "os": "Windows / macOS / Ubuntu",
+    "note": "上游 issue 已关闭；「没用代理也报」的场景我们在客户机上见过多次，根因基本都是杀软 HTTPS 扫描或梯子 TUN 模式。"
+  },
+  "sources": [
+    "https://github.com/anthropics/claude-code/issues/74369",
+    "https://github.com/anthropics/claude-code/issues/24470"
+  ],
+  "tags": [
+    "证书",
+    "杀毒软件",
+    "梯子",
+    "TLS"
+  ]
+}

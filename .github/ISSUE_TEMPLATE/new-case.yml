@@ -1,0 +1,65 @@
+name: 报一个新问题 / 补一条解法
+description: Codex、Claude Code 装不上或报错，且病例库里没有对得上的
+labels: ["case"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提之前先搜一下，说不定已经有了：
+
+        ```
+        npx u-rescue search "你的报错原文"
+        ```
+
+        **⚠️ 贴日志前请删掉 API key、token、邮箱、内网地址。**
+        `npx u-rescue doctor --json` 的输出已经做过脱敏，可以直接贴。
+
+  - type: textarea
+    id: symptom
+    attributes:
+      label: 什么现象
+      description: 用你自己的话说，不用术语。「点了没反应」「装完找不到命令」都行。
+      placeholder: 例：开了梯子之后 Codex 一执行命令就弹窗，关掉梯子就好了
+    validations: { required: true }
+
+  - type: textarea
+    id: error
+    attributes:
+      label: 报错原文
+      description: 原样复制，别改写、别翻译 —— 别人靠这段原文搜到你这条。
+      render: text
+    validations: { required: true }
+
+  - type: input
+    id: env
+    attributes:
+      label: 系统和版本
+      placeholder: 例：Windows 11 / Codex CLI 0.142.3 / Node 22.14
+    validations: { required: true }
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: 已经试过什么
+      description: 试过但没用的也写上 —— 排除掉的方向和有效方案一样值钱。
+    validations: { required: true }
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 解决办法（如果你已经修好了）
+      description: |
+        修好了的话请务必写这一段，这是最有价值的部分。请说明：
+        怎么修的、为什么这么修有效、你怎么确认真修好了（不是「好像好了」）。
+        只有报错没有解法的 issue 我们也收，但不会直接变成病例——
+        因为一条搜到了却没有下文的病例，对用户是负价值。
+
+  - type: dropdown
+    id: verified
+    attributes:
+      label: 这个解法你验证过吗
+      options:
+        - 我在自己机器上验过，修好了
+        - 我复现了问题，但方案是网上看来的
+        - 还没修好，只是报告问题
+    validations: { required: true }

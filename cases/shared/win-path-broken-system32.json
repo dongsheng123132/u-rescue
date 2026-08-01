@@ -1,0 +1,85 @@
+{
+  "id": "shared.win.path-broken-system32",
+  "tool": "shared",
+  "title": "什么都装不上，连 where、tasklist 这些系统命令都找不到",
+  "symptoms": [
+    "装任何 AI 工具都失败，报错五花八门",
+    "命令行里敲 where 或 ipconfig 提示不是内部或外部命令",
+    "以前用过某些「系统优化 / 清理 / 修改 PATH」的工具",
+    "别人机器同样步骤能装，就这台不行"
+  ],
+  "errors": [
+    "不是内部或外部命令",
+    "is not recognized as an internal or external command",
+    "The system cannot find the path specified"
+  ],
+  "platforms": [
+    "windows"
+  ],
+  "severity": "blocker",
+  "diagnose": [
+    {
+      "id": "os",
+      "role": "precondition",
+      "kind": "os_is",
+      "name": "windows",
+      "expect": "pass",
+      "label": "当前是 Windows"
+    },
+    {
+      "id": "where.gone",
+      "role": "evidence",
+      "kind": "path_has",
+      "name": "where",
+      "expect": "fail",
+      "label": "连系统自带的 where 都找不到"
+    }
+  ],
+  "cause": "Windows 的 PATH 环境变量被改坏了，把 %SystemRoot%\\system32 这类系统目录弄丢了。常见来源：某些「优化大师 / 清理工具」重写 PATH、手动编辑时把整串覆盖掉、或者装某个软件时它的安装脚本把 PATH 截断了（PATH 有长度上限，超了会被截）。一旦 system32 掉了，几乎所有安装脚本都会挂，但报错各不相同——所以现象看起来是「什么都装不上」，很容易被误判成系统中毒或要重装。**判据很干脆：连 where 都找不到，就是它。**",
+  "fix": {
+    "steps": [
+      {
+        "desc": "先看现在的 PATH 长什么样（用完整路径调用，绕开坏掉的 PATH）：",
+        "cmd": "C:\\Windows\\System32\\cmd.exe /c echo %PATH%",
+        "shell": "cmd",
+        "risk": "read-only"
+      },
+      {
+        "desc": "确认缺的是系统目录。正常的用户机 PATH 里必须能看到 C:\\Windows\\system32、C:\\Windows 和 C:\\Windows\\System32\\Wbem。",
+        "risk": "read-only"
+      },
+      {
+        "desc": "先备份当前 PATH，出问题能回。",
+        "cmd": "C:\\Windows\\System32\\reg.exe export \"HKCU\\Environment\" %USERPROFILE%\\Desktop\\path-backup.reg",
+        "shell": "cmd",
+        "risk": "low",
+        "rollback": "双击桌面上的 path-backup.reg 导回。"
+      },
+      {
+        "desc": "用「系统属性 → 环境变量」界面手工把缺的系统目录补回**系统变量**里的 Path（不是用户变量）。图形界面比命令行安全，能看到每一条。",
+        "risk": "medium",
+        "rollback": "用上一步的 .reg 备份还原，或在同一界面删掉刚加的条目。"
+      },
+      {
+        "desc": "改完必须重开终端（最好注销重登），否则旧进程还是旧 PATH。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "新开一个 cmd，敲 where notepad 能打印路径；再跑一次原来失败的安装命令，能正常往下走。",
+    "auto": false
+  },
+  "evidence": "field",
+  "verified_on": {
+    "date": "2026-08-01",
+    "os": "Windows 10 / 11",
+    "note": "真实客户机排查所得。这台机器上所有 AI 工具装机全失败，根因就是 PATH 里丢了 system32。"
+  },
+  "sources": [],
+  "uking": "U-King 的环境体检会直接报出 PATH 是否缺系统目录，不用自己一条条数。",
+  "tags": [
+    "PATH",
+    "系统损坏",
+    "装不上",
+    "Windows"
+  ]
+}

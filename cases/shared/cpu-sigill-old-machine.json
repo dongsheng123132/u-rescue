@@ -1,0 +1,68 @@
+{
+  "id": "shared.cpu.sigill-old-machine",
+  "tool": "shared",
+  "title": "老电脑上工具一启动就闪退，没有任何报错",
+  "symptoms": [
+    "双击就没反应，或者黑窗一闪而过",
+    "命令行里跑直接退出，不打印任何东西",
+    "同样的安装包在新电脑上没问题",
+    "电脑是好几年前的老机器"
+  ],
+  "errors": [
+    "SIGILL",
+    "Illegal instruction",
+    "0xC000001D",
+    "STATUS_ILLEGAL_INSTRUCTION"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "severity": "blocker",
+  "cause": "现在的工具链默认按较新的 CPU 指令集编译（AVX/AVX2 之类）。老 CPU 上遇到不认识的指令，操作系统直接终止进程，不给任何用户可见的错误——所以现象是「什么都不显示就没了」。这是最容易被误判的一类：用户会以为是没装好、是杀软、是权限，反复重装几十遍都没用，因为问题根本不在软件安装上。**判据是：报错代码里出现 SIGILL 或 0xC000001D，或者在事件查看器里能看到「非法指令」。**",
+  "fix": {
+    "steps": [
+      {
+        "desc": "先拿到证据，别猜。Windows 打开事件查看器 → Windows 日志 → 应用程序，找刚才崩溃那条，看异常代码是不是 0xC000001D。",
+        "risk": "read-only"
+      },
+      {
+        "desc": "Linux/macOS 直接在终端跑，看退出信号：",
+        "cmd": "codex --version; echo \"exit=$?\"",
+        "shell": "bash",
+        "risk": "read-only"
+      },
+      {
+        "desc": "确认是老 CPU 之后，先查它到底支持什么指令集，好判断有没有救。",
+        "cmd": "wmic cpu get name,description",
+        "shell": "cmd",
+        "risk": "read-only"
+      },
+      {
+        "desc": "找该工具的旧版本或「兼容/通用」构建版本装。有些项目会额外提供不依赖新指令集的构建。",
+        "risk": "low",
+        "rollback": "卸载旧版本装回最新版。"
+      },
+      {
+        "desc": "如果工具本身没有兼容构建，这台机器就是跑不了——换机器或用网页版。**这一条要早点告诉用户**，比让他继续重装二十遍强。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "工具能启动并打印版本号，不是一闪而过。",
+    "auto": false
+  },
+  "evidence": "field",
+  "verified_on": {
+    "date": "2026-08-01",
+    "os": "Windows 10",
+    "note": "客户机实证：老 CPU 触发 SIGILL，表现为静默闪退，反复重装无效。"
+  },
+  "sources": [],
+  "tags": [
+    "老电脑",
+    "闪退",
+    "SIGILL",
+    "CPU"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "id": "shared.mac.tun-vpn-breaks-dns",
+  "tool": "shared",
+  "title": "Mac 上时好时坏：一会儿能用一会儿连不上，重启梯子就好一阵",
+  "symptoms": [
+    "同一个功能上午能用下午不能用",
+    "关掉梯子反而好了",
+    "重启代理软件能好一段时间，过会儿又坏",
+    "浏览器正常，命令行工具连不上"
+  ],
+  "errors": [
+    "getaddrinfo ENOTFOUND",
+    "EAI_AGAIN",
+    "fetch failed",
+    "Could not resolve host"
+  ],
+  "platforms": [
+    "macos"
+  ],
+  "severity": "major",
+  "cause": "代理软件的 TUN / 增强模式会接管整个系统的 DNS 解析。当机器上同时还有别的虚拟网卡（Tailscale、公司 VPN、Docker 网络），两边会抢 DNS 配置，结果是解析间歇性失败——表现就是「时好时坏」。浏览器往往感觉不到，因为它有自己的 DNS-over-HTTPS 兜底；命令行工具走系统解析，所以先坏。这类问题最难查的地方在于它不稳定，随便做点什么都像「修好了」，其实只是碰巧赶上一个好窗口。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "先证明是 DNS 而不是网络。连着测两次，一次用域名一次用直连 IP：",
+        "cmd": "for i in 1 2 3 4 5; do dig +short api.anthropic.com | head -1; sleep 1; done",
+        "shell": "bash",
+        "risk": "read-only"
+      },
+      {
+        "desc": "结果时有时无（有几次是空的）→ 确诊 DNS 抢占。看看有哪些虚拟网卡在抢：",
+        "cmd": "scutil --dns | grep -A2 'resolver #' | head -30",
+        "shell": "bash",
+        "risk": "read-only"
+      },
+      {
+        "desc": "在代理软件里关掉 TUN / 增强模式，改用系统代理或规则模式。这一步通常立刻见效。",
+        "risk": "low",
+        "rollback": "在代理软件里重新打开 TUN 模式。"
+      },
+      {
+        "desc": "必须同时用 Tailscale 之类的服务时，在代理软件的规则里把它的域名和网段加进直连白名单，让两者别抢同一片流量。",
+        "risk": "low",
+        "rollback": "删掉这些白名单规则。"
+      },
+      {
+        "desc": "改完刷一次 DNS 缓存，别让旧的坏结果继续生效。",
+        "cmd": "sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder",
+        "shell": "bash",
+        "risk": "low",
+        "rollback": "无需回滚，缓存会自然重建。"
+      }
+    ],
+    "verify": "连续跑十次上面那条 dig，每次都能解析出地址；再连续用三次原来时好时坏的功能都正常。",
+    "auto": false
+  },
+  "evidence": "field",
+  "verified_on": {
+    "date": "2026-08-01",
+    "os": "macOS",
+    "note": "真实排查：某代理软件的 TUN 模式和 Tailscale 抢 DNS，导致 AI 作图功能时好时坏，关掉 TUN 后恢复。"
+  },
+  "sources": [],
+  "tags": [
+    "macOS",
+    "DNS",
+    "梯子",
+    "时好时坏"
+  ]
+}

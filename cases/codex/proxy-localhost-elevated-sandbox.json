@@ -1,0 +1,92 @@
+{
+  "id": "codex.proxy.localhost-elevated-sandbox",
+  "tool": "codex",
+  "title": "开了梯子再启动 Codex，弹「找不到指定的模块」、命令跑不了",
+  "symptoms": [
+    "用脚本/快捷方式带着代理启动 Codex，一执行命令就弹窗报错",
+    "从开始菜单正常打开没事，一挂代理就坏",
+    "弹窗提示 codex-windows-sandbox-setup.exe 找不到指定的模块",
+    "Codex 反复刷新防火墙/沙箱状态，改文件（apply_patch）失败"
+  ],
+  "errors": [
+    "codex-windows-sandbox-setup.exe 找不到指定的模块",
+    "elevated sandbox"
+  ],
+  "platforms": [
+    "windows"
+  ],
+  "severity": "blocker",
+  "diagnose": [
+    {
+      "id": "os",
+      "role": "precondition",
+      "kind": "os_is",
+      "name": "windows",
+      "expect": "pass",
+      "label": "当前是 Windows"
+    },
+    {
+      "id": "codex.cfg",
+      "role": "precondition",
+      "kind": "file_exists",
+      "path": "~/.codex/config.toml",
+      "expect": "pass",
+      "label": "装了 Codex"
+    },
+    {
+      "id": "proxy.loopback",
+      "role": "evidence",
+      "kind": "env_contains",
+      "name": "HTTPS_PROXY",
+      "value": "127.0.0.1",
+      "expect": "pass",
+      "label": "代理指向本机回环地址（梯子的本地端口）"
+    }
+  ],
+  "cause": "Codex 桌面版 Windows 的「提权沙箱」(sandbox = \"elevated\") 在启动时会读进程环境变量里的 HTTP_PROXY/HTTPS_PROXY。当代理指向本机回环地址（127.0.0.1:7897 这类梯子的本地端口）时，提权后的沙箱辅助进程处在另一个权限/网络上下文里，够不着这个回环端口，于是沙箱初始化失败，弹出 setup helper 的模块加载错误。国内用户几乎人人挂本地代理，所以这条在中国的命中率远高于海外。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "先确认是不是这条：从开始菜单直接打开 Codex（不经过带代理的脚本/快捷方式），跑一条简单命令。如果不报错了，就是它。",
+        "risk": "read-only"
+      },
+      {
+        "desc": "方案 A（推荐）：把 Windows 沙箱模式从 elevated 改成 unelevated。编辑 ~/.codex/config.toml，加上这段。",
+        "cmd": "[windows]\nsandbox = \"unelevated\"",
+        "shell": "any",
+        "risk": "low",
+        "rollback": "把 sandbox 改回 \"elevated\" 或删掉这两行即可，改前先复制一份 config.toml。"
+      },
+      {
+        "desc": "方案 B：保留 elevated，改成不带代理环境变量启动 Codex（把代理交给系统代理设置，而不是进程环境变量）。",
+        "risk": "low",
+        "rollback": "恢复原来的启动脚本。"
+      },
+      {
+        "desc": "如果必须同时用本地代理和环境变量，确保 NO_PROXY 里带上回环地址，减少沙箱自检时绕道代理。",
+        "cmd": "NO_PROXY=localhost,127.0.0.1,::1",
+        "shell": "any",
+        "risk": "low",
+        "rollback": "删除该环境变量。"
+      }
+    ],
+    "verify": "重开 Codex，让它改一个文件（apply_patch）或跑一条 shell 命令，不再弹模块错误，且命令有正常输出。",
+    "auto": false
+  },
+  "evidence": "upstream-issue",
+  "verified_on": {
+    "date": "2026-08-01",
+    "tool_version": "Codex App 26.623.8305.0 / command runner 0.142.3",
+    "os": "Windows 11",
+    "note": "上游 issue 仍 open，方案 A/B 是提交者自己验证过的 workaround，我们未在客户机复现。"
+  },
+  "sources": [
+    "https://github.com/openai/codex/issues/30538"
+  ],
+  "tags": [
+    "代理",
+    "梯子",
+    "沙箱",
+    "Windows"
+  ]
+}

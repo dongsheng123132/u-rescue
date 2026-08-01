@@ -1,0 +1,102 @@
+{
+  "id": "claude-code.install.npmrc-bad-prefix",
+  "tool": "claude-code",
+  "title": "npm 说装成功了，但 claude 命令就是找不到",
+  "symptoms": [
+    "npm install -g 显示成功，敲 claude 却说找不到命令",
+    "重装很多次都一样",
+    "以前跟着某篇教程改过 npm 配置",
+    "换个终端也一样找不到"
+  ],
+  "errors": [
+    "command not found: claude",
+    "'claude' 不是内部或外部命令",
+    "npm ERR! code ENOENT"
+  ],
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "severity": "blocker",
+  "diagnose": [
+    {
+      "id": "npm",
+      "role": "precondition",
+      "kind": "path_has",
+      "name": "npm",
+      "expect": "pass",
+      "label": "装了 npm"
+    },
+    {
+      "id": "prefix",
+      "role": "evidence",
+      "kind": "npm_prefix_on_path",
+      "expect": "pass",
+      "label": "npm 全局目录不在 PATH 上"
+    }
+  ],
+  "cause": "npm 有个 prefix 配置决定全局包装到哪儿。如果 ~/.npmrc 里的 prefix 指向了一个不存在、没权限、或者不在 PATH 上的目录（常见于跟着网上教程改过 prefix、或从旧机器迁移过 .npmrc），npm 会老老实实把包装进那个目录并报告成功——但那个目录不在 PATH 上，所以命令永远找不到。**「装成功了但命令不存在」这个组合，基本可以直接锁定 prefix 问题**，不用再怀疑网络或权限。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "看 npm 现在把全局包往哪儿装：",
+        "cmd": "npm config get prefix && npm root -g",
+        "shell": "any",
+        "risk": "read-only"
+      },
+      {
+        "desc": "再看 PATH 里有没有这个目录的 bin。两者对不上就是确诊。",
+        "cmd": "echo $PATH",
+        "shell": "bash",
+        "risk": "read-only"
+      },
+      {
+        "desc": "看一眼 .npmrc 里到底写了什么（问题多半就在这个文件里）：",
+        "cmd": "cat ~/.npmrc",
+        "shell": "bash",
+        "risk": "read-only"
+      },
+      {
+        "desc": "方案 A（推荐）：删掉自定义 prefix，让 npm 回到默认位置。",
+        "cmd": "npm config delete prefix",
+        "shell": "any",
+        "risk": "low",
+        "rollback": "npm config set prefix \"原来的值\"（执行前先记下上一步查到的值）。"
+      },
+      {
+        "desc": "方案 B：保留 prefix，把它的 bin 目录加进 PATH。适合你确实需要装到自定义位置的情况。",
+        "cmd": "echo 'export PATH=\"$(npm config get prefix)/bin:$PATH\"' >> ~/.zshrc",
+        "shell": "zsh",
+        "risk": "low",
+        "rollback": "编辑 ~/.zshrc 删掉这一行；改前先 cp ~/.zshrc ~/.zshrc.bak。"
+      },
+      {
+        "desc": "改完重装一次，并**新开一个终端**再验证。",
+        "cmd": "npm install -g @anthropic-ai/claude-code",
+        "shell": "any",
+        "risk": "low",
+        "rollback": "npm uninstall -g @anthropic-ai/claude-code"
+      }
+    ],
+    "verify": "新开终端敲 claude --version 能打印版本号；where/which claude 指向的路径在 PATH 里。",
+    "auto": true,
+    "uking_action": "runtime.stack.inspect"
+  },
+  "evidence": "field",
+  "verified_on": {
+    "date": "2026-08-01",
+    "os": "macOS / Windows",
+    "note": "客户机实证：Mac 上 claude 装不上，根因是 .npmrc 里残留了一个坏的 prefix。"
+  },
+  "sources": [
+    "https://github.com/anthropics/claude-code/issues/79031"
+  ],
+  "uking": "U-King 装机会自己检测并绕开坏 prefix，装完还会验证命令真的能跑起来，不只看 npm 的退出码。",
+  "tags": [
+    "安装",
+    "npm",
+    "prefix",
+    "命令找不到"
+  ]
+}

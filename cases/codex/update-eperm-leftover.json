@@ -1,0 +1,64 @@
+{
+  "id": "codex.update.eperm-leftover",
+  "tool": "codex",
+  "title": "Codex 说升级成功了，但 npm 目录里留了一堆删不掉的垃圾",
+  "symptoms": [
+    "升级提示成功，之后再装别的东西就报 EPERM",
+    "npm 全局目录里多出 .codex-xxxx 这种临时文件夹",
+    "重装 Codex 时报文件被占用"
+  ],
+  "errors": [
+    "EPERM: operation not permitted, unlink",
+    "codex.exe",
+    "npm WARN cleanup"
+  ],
+  "platforms": [
+    "windows"
+  ],
+  "severity": "minor",
+  "cause": "Windows 上正在运行的 exe 会被系统锁住，删不掉。Codex 的自更新走 npm install -g，npm 换完新版后要清理旧的 codex.exe，此时如果还有 Codex 进程活着，unlink 就报 EPERM。npm 把它当成 warning 咽下去了，于是「升级成功」和「留下垃圾」同时成立——这类问题最坑的地方是它不报错，等到下次装东西才爆出来。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "先把所有 Codex 进程关干净（含托盘里的桌面版），再动手。别用按名字杀进程的偏方，Windows 上重名的太多。",
+        "risk": "read-only"
+      },
+      {
+        "desc": "找到 npm 全局目录。",
+        "cmd": "npm root -g",
+        "shell": "any",
+        "risk": "read-only"
+      },
+      {
+        "desc": "进到上一步打印的目录，手动删掉里面形如 .codex-* 的临时文件夹。删之前先看一眼里面确实只有 codex 的残留。",
+        "risk": "low",
+        "rollback": "这些是升级残留的临时目录，删掉不影响已装好的 Codex；不放心可以先剪切到桌面放两天。"
+      },
+      {
+        "desc": "重装一次确保完整。",
+        "cmd": "npm install -g @openai/codex",
+        "shell": "any",
+        "risk": "low",
+        "rollback": "npm uninstall -g @openai/codex"
+      }
+    ],
+    "verify": "codex --version 正常；再跑一次 npm install -g 任意包不再报 EPERM。",
+    "auto": false
+  },
+  "evidence": "upstream-issue",
+  "verified_on": {
+    "date": "2026-08-01",
+    "tool_version": "codex-cli 0.130.0",
+    "os": "Windows 10/11",
+    "note": "上游 issue 仍 open，作者在 GitHub Actions Windows runner 上稳定复现。"
+  },
+  "sources": [
+    "https://github.com/openai/codex/issues/21872"
+  ],
+  "tags": [
+    "升级",
+    "EPERM",
+    "npm",
+    "Windows"
+  ]
+}

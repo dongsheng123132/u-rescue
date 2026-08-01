@@ -1,0 +1,71 @@
+{
+  "id": "codex.install.npm-subpackage-404",
+  "tool": "codex",
+  "title": "npm 装 Codex 报 404，换个版本号又能装上",
+  "symptoms": [
+    "npm install -g @openai/codex 报 404 Not Found",
+    "官网说的最新版装不上，装旧一个版本就好了",
+    "装完了 codex 命令能跑，但一运行就说找不到二进制"
+  ],
+  "errors": [
+    "npm error 404 Not Found - GET https://registry.npmjs.org/@openai/codex",
+    "404 Not Found - GET .../@openai/codex-win32-x64",
+    "npm ERR! code E404"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "severity": "blocker",
+  "cause": "Codex 的 npm 包把平台原生二进制拆成了子包（@openai/codex-win32-x64 这类）。发版时主包和某个平台子包可能不同步上架，于是主包能解析、子包 404，表现成「这个版本装不上、上一个版本可以」。国内还叠加第二层原因：走代理或镜像时 registry 元数据可能是缓存的旧快照，拿到的版本号在真实 registry 上还不存在。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "先看这个版本到底有没有真上架，别猜。",
+        "cmd": "npm view @openai/codex versions --json",
+        "shell": "any",
+        "risk": "read-only"
+      },
+      {
+        "desc": "退回上一个可用版本装（把 X.Y.Z 换成上一步列出来的、确实存在的版本）。",
+        "cmd": "npm install -g @openai/codex@X.Y.Z",
+        "shell": "any",
+        "risk": "low",
+        "rollback": "npm uninstall -g @openai/codex"
+      },
+      {
+        "desc": "如果是国内镜像/代理拿到旧元数据，绕过缓存重试一次。",
+        "cmd": "npm install -g @openai/codex --registry=https://registry.npmjs.org --prefer-online",
+        "shell": "any",
+        "risk": "low",
+        "rollback": "npm uninstall -g @openai/codex"
+      },
+      {
+        "desc": "还不行就直接下官方 release 里的独立二进制，不走 npm。",
+        "risk": "low",
+        "rollback": "删掉下载的二进制文件即可。"
+      }
+    ],
+    "verify": "codex --version 能打印版本号，且随便跑一句 codex 命令不报「找不到二进制」。",
+    "auto": true,
+    "uking_action": "runtime.stack.inspect"
+  },
+  "evidence": "field",
+  "verified_on": {
+    "date": "2026-08-01",
+    "os": "Windows 11 / macOS",
+    "note": "我们在客户机上多次遇到；U-King 的安装 skill 从 v24 起改成三源回退，就是为了绕开这条。上游 #31936 记录了同型问题。"
+  },
+  "sources": [
+    "https://github.com/openai/codex/issues/31936",
+    "https://github.com/openai/codex/issues/13581"
+  ],
+  "uking": "U-King 装 Codex 时会自动探测可用版本并三源回退，不需要手动挑版本号。",
+  "tags": [
+    "安装",
+    "npm",
+    "404",
+    "镜像"
+  ]
+}

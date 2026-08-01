@@ -1,0 +1,81 @@
+{
+  "id": "shared.pm.command-hijacked",
+  "tool": "shared",
+  "title": "敲 claude / codex 打开的不是我装的那个，或者版本对不上",
+  "symptoms": [
+    "命令能跑，但界面/版本和官方的不一样",
+    "刚更新完，一敲还是旧版本",
+    "装过好几家的 AI 助手包，之后命令就乱了",
+    "改了配置没生效，怀疑改错了地方"
+  ],
+  "errors": [],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "severity": "major",
+  "diagnose": [
+    {
+      "id": "dup.claude",
+      "role": "evidence",
+      "kind": "path_duplicates",
+      "name": "claude",
+      "expect": "pass",
+      "label": "PATH 上有多个 claude"
+    },
+    {
+      "id": "dup.codex",
+      "role": "evidence",
+      "kind": "path_duplicates",
+      "name": "codex",
+      "expect": "pass",
+      "label": "PATH 上有多个 codex"
+    }
+  ],
+  "cause": "PATH 是按顺序找的，第一个匹配就赢。装过多家 AI 工具包的机器上，`claude` / `codex` / `openclaw` 这些通用命令名会被不同厂商各写一份（有的是真程序，有的是转发脚本），谁的目录在 PATH 前面谁生效。用户以为自己在用 A，实际跑的是 B——于是「改了配置没生效」「更新了还是旧版」这类怪现象全都说得通了。**这类问题最大的特征是：一切都没报错，只是行为不对。**",
+  "fix": {
+    "steps": [
+      {
+        "desc": "先看这个命令到底解析到哪个文件。Windows 会把所有匹配都列出来，第一行才是实际生效的：",
+        "cmd": "where.exe claude",
+        "shell": "cmd",
+        "risk": "read-only"
+      },
+      {
+        "desc": "macOS / Linux 用这条，-a 同样会列出全部候选：",
+        "cmd": "which -a claude",
+        "shell": "bash",
+        "risk": "read-only"
+      },
+      {
+        "desc": "如果列出多条，确认第一条是不是你想要的。不是的话，把你想用的那个目录调到 PATH 更前面——**优先调顺序，不要急着删别人的文件**，删了可能把另一个工具搞坏。",
+        "risk": "medium",
+        "rollback": "把 PATH 顺序改回原样；改前先导出备份（见 shared.win.path-broken-system32 的备份步骤）。"
+      },
+      {
+        "desc": "确认修好之后再核对一次版本，别只看命令能跑。",
+        "cmd": "claude --version",
+        "shell": "any",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "where/which 的第一行指向你期望的那个安装位置，且 --version 打印的版本和你刚装的一致。",
+    "auto": false
+  },
+  "evidence": "field",
+  "verified_on": {
+    "date": "2026-08-01",
+    "os": "Windows 11 / macOS",
+    "note": "客户机实见：多家 AI 工具包互相抢同名命令，用户完全无感，只觉得「配置怎么改都没用」。"
+  },
+  "sources": [],
+  "uking": "U-King 的环境体检会列出每个命令实际解析到的路径和版本，撞名一眼可见。",
+  "tags": [
+    "PATH",
+    "命令冲突",
+    "版本不对",
+    "多厂商"
+  ],
+  "diagnose_match": "any"
+}

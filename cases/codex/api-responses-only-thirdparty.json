@@ -1,0 +1,65 @@
+{
+  "id": "codex.api.responses-only-thirdparty",
+  "tool": "codex",
+  "title": "换成第三方中转/国产模型后，Codex 一发消息就报错",
+  "symptoms": [
+    "配了别家的 API 地址，Codex 连不上或一发消息就 404/400",
+    "同一个 key 和地址在别的工具（Claude Code、Cherry Studio）里是好的",
+    "升级 Codex 之后原本能用的第三方端点突然不能用了"
+  ],
+  "errors": [
+    "404 Not Found",
+    "400 Bad Request",
+    "/v1/responses",
+    "unsupported endpoint"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "severity": "blocker",
+  "cause": "新版 Codex CLI 改成只走 OpenAI 的 Responses API（/v1/responses），不再用通用的 /v1/chat/completions。大多数第三方中转和国产模型只实现了 chat/completions，于是路径直接 404；有的中转做了转发但不支持 Responses 的请求体结构，就变成 400。判断要点：**同一个 key 在别的工具里能用，只有 Codex 不行**——这基本就锁定是协议不匹配，不是 key 或网络的问题。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "先确认对方端点支不支持 Responses。拿你的地址试一下（把 BASE 和 KEY 换成自己的）：",
+        "cmd": "curl -s -o /dev/null -w \"%{http_code}\\n\" -X POST \"$BASE/v1/responses\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -d '{\"model\":\"gpt-4o-mini\",\"input\":\"hi\"}'",
+        "shell": "bash",
+        "risk": "read-only"
+      },
+      {
+        "desc": "返回 404 = 对方没有这个接口，Codex 就是用不了。换一个明确支持 Responses API 的服务商，或者用官方账号登录 Codex。",
+        "risk": "read-only"
+      },
+      {
+        "desc": "如果服务商说支持但仍 400，多半是模型 id 不对（Responses 对模型名更严）。先用服务商文档里给的 Responses 示例模型跑通，再换成你想用的。",
+        "risk": "low",
+        "rollback": "把 config.toml 里的 model 改回原值。"
+      },
+      {
+        "desc": "不想换服务商，就退回到还支持 chat/completions 的旧版 Codex（注意这会失去新版功能，属于权宜之计）。",
+        "cmd": "npm install -g @openai/codex@<旧版本号>",
+        "shell": "any",
+        "risk": "medium",
+        "rollback": "npm install -g @openai/codex 装回最新版。"
+      }
+    ],
+    "verify": "在 Codex 里正常发一句话并收到回复，不是报错也不是空响应。",
+    "auto": false
+  },
+  "evidence": "field",
+  "verified_on": {
+    "date": "2026-08-01",
+    "os": "Windows 11",
+    "note": "我们在自己的中转服务上验证过：只有把渠道改成透传（而不是做协议转换）Codex 才能通。DeepSeek 官方已原生支持 Responses API。"
+  },
+  "sources": [],
+  "uking": "U-King 配 Codex 时默认写的是已验证支持 Responses 的端点，不用自己试协议。",
+  "tags": [
+    "第三方端点",
+    "Responses API",
+    "404",
+    "中转"
+  ]
+}

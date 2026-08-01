@@ -1,0 +1,88 @@
+{
+  "id": "shared.win.chinese-username-path",
+  "tool": "shared",
+  "title": "用户名是中文 / 装在 OneDrive 里，装完能跑但一用就出乱码或找不到文件",
+  "symptoms": [
+    "路径里有中文，脚本报找不到文件",
+    "日志里出现问号或方块乱码",
+    "文档在 OneDrive 同步目录里，工具时不时读不到",
+    "同样的操作在同事电脑上没问题"
+  ],
+  "errors": [
+    "系统找不到指定的文件",
+    "The system cannot find the file specified",
+    "ENOENT",
+    "UnicodeDecodeError",
+    "MODULE_NOT_FOUND"
+  ],
+  "platforms": [
+    "windows"
+  ],
+  "severity": "major",
+  "diagnose": [
+    {
+      "id": "os",
+      "role": "precondition",
+      "kind": "os_is",
+      "name": "windows",
+      "expect": "pass",
+      "label": "当前是 Windows"
+    },
+    {
+      "id": "user.cjk",
+      "role": "evidence",
+      "kind": "env_nonascii",
+      "name": "USERPROFILE",
+      "expect": "pass",
+      "label": "用户目录里有中文"
+    }
+  ],
+  "cause": "三个独立的坑经常同时出现在同一台家用机上：① 中文用户名——C:\\Users\\张三\\ 这类路径，遇到没做好编码处理的脚本（尤其是 .bat 和一些 Python 工具）会变成乱码找不到文件，因为 cmd 默认按 GBK 解码而脚本常是 UTF-8；② OneDrive 接管了文档/桌面——文件可能只是个占位符没真正下载到本地，程序打开时就 ENOENT；③ 路径过长——Windows 默认 260 字符上限，node_modules 这种深目录很容易超。这三条都不会给你「路径有问题」这样的提示，只会给一个看起来无关的报错。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "先确认自己的用户目录是不是中文：",
+        "cmd": "echo %USERPROFILE%",
+        "shell": "cmd",
+        "risk": "read-only"
+      },
+      {
+        "desc": "最省事的办法：把 AI 工具和工作目录都放到纯英文的短路径下，比如 D:\\ai 或 C:\\ai。不要放在桌面、文档、OneDrive 里。",
+        "risk": "low",
+        "rollback": "把目录移回原位置即可。"
+      },
+      {
+        "desc": "如果项目必须在 OneDrive 目录里，右键该文件夹 → 「始终保留在此设备上」，让文件真正落到本地。",
+        "risk": "low",
+        "rollback": "改回「按需下载」。"
+      },
+      {
+        "desc": "打开长路径支持（需要管理员，改完重启）。",
+        "cmd": "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\" /v LongPathsEnabled /t REG_DWORD /d 1 /f",
+        "shell": "cmd",
+        "risk": "medium",
+        "rollback": "把命令末尾的 /d 1 改成 /d 0 再跑一次。"
+      },
+      {
+        "desc": "改用户名本身不推荐——Windows 改账户显示名不会改用户目录名，真要改得新建账户迁移，代价远大于换个工作目录。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "把工具和项目挪到纯英文短路径后重跑一次原来失败的操作，能正常完成。",
+    "auto": false
+  },
+  "evidence": "field",
+  "verified_on": {
+    "date": "2026-08-01",
+    "os": "Windows 10 / 11",
+    "note": "客户机高频。中文路径 + GBK/UTF-8 解码不一致，我们在自己的升级脚本上也栽过同一个坑。"
+  },
+  "sources": [],
+  "uking": "U-King 装机前会做一次「脆弱环境」预检，OneDrive、中文用户名、长路径三项都会提前提示。",
+  "tags": [
+    "中文路径",
+    "OneDrive",
+    "长路径",
+    "编码"
+  ]
+}

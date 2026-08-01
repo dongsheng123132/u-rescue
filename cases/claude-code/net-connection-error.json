@@ -1,0 +1,74 @@
+{
+  "id": "claude-code.net.connection-error",
+  "tool": "claude-code",
+  "title": "反复报 API Error (Connection error.) / 回答说到一半断掉",
+  "symptoms": [
+    "一发消息就报 Connection error",
+    "回答写到一半突然断了，提示连接中途关闭",
+    "时好时坏，重试几次能成一次",
+    "网页版能用，命令行版不行"
+  ],
+  "errors": [
+    "API Error (Connection error.)",
+    "Connection closed mid-response",
+    "ECONNRESET",
+    "fetch failed",
+    "terminated"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "severity": "blocker",
+  "cause": "这是最高频也最容易误判的一类，因为「连接错误」四个字盖住了至少四种完全不同的病因：① 代理只代理了 HTTP 请求，没代理长连接/流式响应，于是握手成功、流到一半被掐；② 梯子节点不稳或有连接数限制，长请求被中途回收；③ 本地网络设备（部分家用路由、企业防火墙）对长时间空闲的 TLS 连接做超时回收；④ 真的是服务端抖动。关键的区分方法是**看它是「一发就断」还是「写到一半断」**：一发就断偏向代理/DNS/证书，写到一半断偏向长连接被中途掐——这两个方向的修法完全不同，不先分清就会瞎试。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "第一步先分型：是「发出去就报错」还是「回答到一半断」？记下来，后面按这个走。",
+        "risk": "read-only"
+      },
+      {
+        "desc": "一发就断 → 先验基础连通性。Windows 用系统自带 curl：",
+        "cmd": "curl -sS -o NUL -w \"%{http_code} %{time_total}s\\n\" https://api.anthropic.com/",
+        "shell": "cmd",
+        "risk": "read-only"
+      },
+      {
+        "desc": "写到一半断 → 关掉梯子的「TUN / 全局模式」，改成规则模式或直接把 API 域名加白；或者换一个更稳的节点再试。国内跨境长连接对节点质量非常敏感。",
+        "risk": "low",
+        "rollback": "在梯子软件里改回原来的模式。"
+      },
+      {
+        "desc": "确认代理环境变量没有把回环地址也代理掉（否则本地服务互调也被绕出去）。",
+        "cmd": "$env:NO_PROXY=\"localhost,127.0.0.1,::1\"",
+        "shell": "powershell",
+        "risk": "low",
+        "rollback": "删掉该变量。"
+      },
+      {
+        "desc": "如果全程没挂代理且 curl 也连不上，那基本是网络本身到不了，换网络（手机热点）验证一次就能定性——别在这一步继续调配置。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "连续发三次较长的请求都能完整收到回复，不是「重试一次碰巧成了」。",
+    "auto": false
+  },
+  "evidence": "upstream-issue",
+  "verified_on": {
+    "date": "2026-08-01",
+    "os": "全平台",
+    "note": "上游有多条长期 open 的同类 issue（#4297 47 条评论、#81847、#82994 等），说明它不是单一 bug 而是一类症状。这里给的是分型思路，不是保证一次修好。"
+  },
+  "sources": [
+    "https://github.com/anthropics/claude-code/issues/4297",
+    "https://github.com/anthropics/claude-code/issues/81847",
+    "https://github.com/anthropics/claude-code/issues/82994"
+  ],
+  "tags": [
+    "网络",
+    "代理",
+    "流式",
+    "掉线"
+  ]
+}

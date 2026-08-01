@@ -1,0 +1,69 @@
+{
+  "id": "codex.install.bigbinary-slow-net",
+  "tool": "codex",
+  "title": "网速慢的机器上装 Codex 卡住不动，等半天最后失败",
+  "symptoms": [
+    "npm 装 Codex 卡在某个百分比很久，最后超时",
+    "反复重试都在同一个地方断",
+    "家里网/手机热点装不上，公司网就能装"
+  ],
+  "errors": [
+    "ETIMEDOUT",
+    "ECONNRESET",
+    "socket hang up",
+    "npm ERR! network"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "severity": "blocker",
+  "cause": "Codex 的平台二进制有几十上百 MB，npm 默认没有断点续传，网络一抖整个包就重来。在国内家庭宽带跨境拉包的场景下，一次成功的概率随文件大小指数下降——所以「重试几次就好了」经常是假象，真正需要的是换源或换传输方式。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "先把超时放宽、重试次数拉高，别让 npm 早早放弃。",
+        "cmd": "npm config set fetch-timeout 600000 && npm config set fetch-retries 5 && npm config set fetch-retry-maxtimeout 120000",
+        "shell": "any",
+        "risk": "low",
+        "rollback": "npm config delete fetch-timeout fetch-retries fetch-retry-maxtimeout"
+      },
+      {
+        "desc": "换国内镜像重装（镜像对大文件的稳定性通常好得多）。",
+        "cmd": "npm install -g @openai/codex --registry=https://registry.npmmirror.com",
+        "shell": "any",
+        "risk": "low",
+        "rollback": "npm uninstall -g @openai/codex"
+      },
+      {
+        "desc": "还是断，就绕开 npm：直接用支持断点续传的下载器拿官方 release 二进制，下完放到 PATH 上的目录里。",
+        "risk": "low",
+        "rollback": "删掉该二进制文件。"
+      },
+      {
+        "desc": "挂了代理反而更慢的情况也很常见——代理节点带宽比直连差。两种都试一次再下结论，别默认「开代理一定更快」。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "codex --version 能打印版本；并且随便跑一句命令不报缺文件。",
+    "auto": true,
+    "uking_action": "runtime.stack.inspect"
+  },
+  "evidence": "field",
+  "verified_on": {
+    "date": "2026-08-01",
+    "os": "Windows 11",
+    "note": "客户机实测：同一台机器换镜像后从必失败变成一次成功。U-King 的安装流程内置了这套回退。"
+  },
+  "sources": [
+    "https://github.com/openai/codex/issues/13581"
+  ],
+  "uking": "U-King 装 Codex 会自动走镜像 + 多源回退 + 断点续传，慢网机器不用自己折腾。",
+  "tags": [
+    "安装",
+    "慢网",
+    "镜像",
+    "超时"
+  ]
+}

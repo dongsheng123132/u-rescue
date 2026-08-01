@@ -1,0 +1,90 @@
+{
+  "id": "claude-code.shell.no-suitable-shell",
+  "tool": "claude-code",
+  "title": "Windows 上 Claude Code 报「No suitable shell found」，装了 Git Bash 也没用",
+  "symptoms": [
+    "一让它执行命令就报找不到合适的 shell",
+    "明明装了 Git Bash，路径也对，还是报",
+    "装了 WSL 也没用，重启也没用"
+  ],
+  "errors": [
+    "No suitable shell found",
+    "Claude CLI requires a Posix shell environment",
+    "Please ensure you have a valid shell installed and the SHELL environment variable set"
+  ],
+  "platforms": [
+    "windows"
+  ],
+  "severity": "blocker",
+  "diagnose": [
+    {
+      "id": "os",
+      "role": "precondition",
+      "kind": "os_is",
+      "name": "windows",
+      "expect": "pass",
+      "label": "当前是 Windows"
+    },
+    {
+      "id": "bash.gone",
+      "role": "evidence",
+      "kind": "path_has",
+      "name": "bash",
+      "expect": "fail",
+      "label": "PATH 上没有任何 bash"
+    }
+  ],
+  "cause": "Claude Code 在 Windows 上需要一个 POSIX shell 来跑 Bash 工具，它按顺序找 Git Bash、WSL，再看 SHELL 环境变量。三个常见失败点：① Git Bash 装在非默认路径（比如装到 D 盘或用了 scoop/winget 的路径）；② SHELL 设了但只在用户级设、当前进程是从更早启动的父进程继承的旧环境；③ 用的是 ARM64 版 Windows，装的 Git 是 ARM 构建，检测逻辑对不上。注意：设完环境变量必须**完全退出应用再重开**，改环境变量不会影响已经在跑的进程——这一条让很多人误以为「设了没用」。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "先确认 Git Bash 到底在哪。在 PowerShell 里跑：",
+        "cmd": "where.exe bash; Get-Command bash -ErrorAction SilentlyContinue",
+        "shell": "powershell",
+        "risk": "read-only"
+      },
+      {
+        "desc": "没装就先装 Git for Windows（默认路径别改），装的时候勾上把 Git 加入 PATH。",
+        "risk": "low",
+        "rollback": "从控制面板卸载 Git for Windows。"
+      },
+      {
+        "desc": "把 SHELL 指到真实的 bash.exe（路径换成上一步查到的）。",
+        "cmd": "[Environment]::SetEnvironmentVariable(\"SHELL\", \"C:\\Program Files\\Git\\bin\\bash.exe\", \"User\")",
+        "shell": "powershell",
+        "risk": "low",
+        "rollback": "[Environment]::SetEnvironmentVariable(\"SHELL\", $null, \"User\")"
+      },
+      {
+        "desc": "如果是 Claude Code CLI，也可以用它自己的专用变量指定，比设 SHELL 更精确。",
+        "cmd": "[Environment]::SetEnvironmentVariable(\"CLAUDE_CODE_GIT_BASH_PATH\", \"C:\\Program Files\\Git\\bin\\bash.exe\", \"User\")",
+        "shell": "powershell",
+        "risk": "low",
+        "rollback": "把该变量设为 $null 删除。"
+      },
+      {
+        "desc": "**完全退出** Claude（含托盘图标 / 后台进程），再重新打开。只关窗口不算。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "让 Claude 执行一条最简单的命令（比如 echo hi），能看到正常输出而不是报 shell 错误。",
+    "auto": false
+  },
+  "evidence": "upstream-issue",
+  "verified_on": {
+    "date": "2026-08-01",
+    "tool_version": "Claude Cowork Desktop 2.1.217 / 2.1.218",
+    "os": "Windows 11",
+    "note": "上游 issue 仍 open；报告者在远程控制场景下即使设对了 SHELL 仍复现，说明还有第二个根因未解。"
+  },
+  "sources": [
+    "https://github.com/anthropics/claude-code/issues/80810",
+    "https://github.com/anthropics/claude-code/issues/73461"
+  ],
+  "tags": [
+    "shell",
+    "Git Bash",
+    "Windows",
+    "环境变量"
+  ]
+}

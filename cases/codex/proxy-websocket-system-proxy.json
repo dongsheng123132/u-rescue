@@ -1,0 +1,55 @@
+{
+  "id": "codex.proxy.websocket-system-proxy",
+  "tool": "codex",
+  "title": "Codex 特别慢／老是掉线，日志里在从 WebSocket 回落 HTTPS",
+  "symptoms": [
+    "能用但明显卡顿，回复一顿一顿的",
+    "日志里反复出现 falling back from WebSockets to HTTPS",
+    "在系统代理（IE/Windows 代理设置）下才这样，手动设环境变量就好了"
+  ],
+  "errors": [
+    "Falling back from WebSockets to HTTPS transport. request timed out"
+  ],
+  "platforms": [
+    "windows"
+  ],
+  "severity": "major",
+  "cause": "Codex 开了 network_proxy + respect_system_proxy 时，HTTPS 请求走得通 Windows 系统代理，但 WebSocket 传输那条路没有完整走系统代理解析器，握手超时后回落到 HTTPS 长轮询。回落本身不报错，所以用户只感觉「变慢了」，不知道发生了什么——这是最容易被误判成「模型慢」「网络差」的一类。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "把系统代理同样显式写成环境变量，让 WebSocket 那条路也能读到。PowerShell 当前会话临时生效：",
+        "cmd": "$env:HTTP_PROXY=\"http://127.0.0.1:7897\"; $env:HTTPS_PROXY=\"http://127.0.0.1:7897\"",
+        "shell": "powershell",
+        "risk": "low",
+        "rollback": "关掉这个终端窗口即失效；如果写进了用户环境变量，用同样方式删除即可。"
+      },
+      {
+        "desc": "端口换成你自己梯子的本地端口（常见 7890 / 7897 / 10809 / 1080）。不确定就在梯子软件里看「本地端口 / 混合端口」。",
+        "risk": "read-only"
+      },
+      {
+        "desc": "注意别和 codex.proxy.localhost-elevated-sandbox 撞车：如果加了环境变量之后弹「找不到指定的模块」，去看那条病例，改用 unelevated 沙箱。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "重开 Codex 跑一轮对话，日志里不再出现 falling back from WebSockets，且首字返回明显变快。",
+    "auto": false
+  },
+  "evidence": "upstream-issue",
+  "verified_on": {
+    "date": "2026-08-01",
+    "tool_version": "Codex App 0.142.1",
+    "os": "Windows 10",
+    "note": "上游 issue 仍 open。"
+  },
+  "sources": [
+    "https://github.com/openai/codex/issues/29958"
+  ],
+  "tags": [
+    "代理",
+    "慢",
+    "WebSocket",
+    "Windows"
+  ]
+}

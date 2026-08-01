@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://u-claw.org.cn/rescue/schema/case.schema.json",
+  "title": "U-Rescue 病例",
+  "description": "一条「AI 工具环境故障」的病例：症状 → 只读诊断 → 病因 → 可回滚的修复 → 验证。同一份 JSON 供三个消费者：小白网页、AI skill、U-King 自动修复。",
+  "type": "object",
+  "required": ["id", "tool", "title", "symptoms", "platforms", "severity", "cause", "fix", "evidence", "verified_on"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+(\\.[a-z0-9-]+){2,}$",
+      "description": "稳定病例 ID，形如 codex.proxy.localhost-sandbox。改名等于换一条病例，旧 ID 不复用。"
+    },
+    "tool": { "enum": ["codex", "claude-code", "openclaw", "hermes", "shared"] },
+    "title": { "type": "string", "minLength": 6, "maxLength": 80, "description": "用户能认出自己的一句话，说人话不说术语。" },
+    "symptoms": {
+      "type": "array", "minItems": 1, "maxItems": 8,
+      "items": { "type": "string", "minLength": 4, "maxLength": 200 },
+      "description": "小白会怎么描述这个问题。搜索命中主要靠它。"
+    },
+    "errors": {
+      "type": "array", "maxItems": 12,
+      "items": { "type": "string", "minLength": 3, "maxLength": 300 },
+      "description": "原文报错片段（保持原始大小写和语言）。用户粘贴报错时靠它精确匹配。"
+    },
+    "platforms": {
+      "type": "array", "minItems": 1,
+      "items": { "enum": ["windows", "macos", "linux", "wsl"] }
+    },
+    "severity": {
+      "enum": ["blocker", "major", "minor"],
+      "description": "blocker=完全不能用；major=能用但功能缺失；minor=体验问题。"
+    },
+    "diagnose": {
+      "type": "array", "maxItems": 10,
+      "description": "只读探针。全部 kind 都是白名单，永远不接受可执行内容——下发链被篡改最坏也只是给出误导性提示，不构成 RCE。省略 diagnose 表示这条病例只能靠搜索报错找到，体检查不出来——这比编一个查不准的探针诚实。",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "expect", "role"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "maxLength": 60 },
+          "label": { "type": "string", "maxLength": 100 },
+          "role": {
+            "enum": ["precondition", "evidence"],
+            "description": "precondition=不成立就说明这条病例压根不适用（是不是 Windows、装没装 npm）；evidence=真正有鉴别力、只在出问题时才成立的证据。★ 只有 evidence 决定体检结论。全用 precondition 会让体检对每个人都报警，等于算命。"
+          },
+          "kind": { "enum": ["cmd_ok", "path_has", "file_exists", "env_present", "env_absent", "env_contains", "env_nonascii", "path_duplicates", "npm_prefix_on_path", "os_is", "http_reach"] },
+          "value": { "type": "string", "maxLength": 120, "description": "env_contains 要匹配的字面子串（不是正则，不做求值）。" },
+          "cmd": { "type": "string", "maxLength": 40, "description": "kind=cmd_ok 时的可执行名，必须在 CLI 的 SAFE_BINS 白名单里。" },
+          "args": { "type": "array", "maxItems": 6, "items": { "type": "string", "maxLength": 40 } },
+          "name": { "type": "string", "maxLength": 60, "description": "path_has 的命令名 / env_* 的变量名。" },
+          "path": { "type": "string", "maxLength": 200, "description": "file_exists 的路径，支持 ~ 与 %VAR% 展开。" },
+          "url": { "type": "string", "maxLength": 200, "description": "http_reach 的地址，仅在 --net 下执行。" },
+          "expect": { "enum": ["pass", "fail"], "description": "pass=探针成立算命中该病例的证据；fail=不成立才算证据。" }
+        }
+      }
+    },
+    "diagnose_match": {
+      "enum": ["all", "any"],
+      "description": "证据怎么算命中。默认 all=全部 evidence 探针都成立才报（严，防误报）；any=任一成立即可，只在多条证据互为替代时才用。"
+    },
+    "cause": { "type": "string", "minLength": 10, "maxLength": 900, "description": "为什么会这样。写机制，不写「可能是环境问题」。" },
+    "fix": {
+      "type": "object",
+      "required": ["steps", "verify"],
+      "additionalProperties": false,
+      "properties": {
+        "steps": {
+          "type": "array", "minItems": 1, "maxItems": 12,
+          "items": {
+            "type": "object",
+            "required": ["desc", "risk"],
+            "additionalProperties": false,
+            "properties": {
+              "desc": { "type": "string", "minLength": 4, "maxLength": 400 },
+              "cmd": { "type": "string", "maxLength": 400, "description": "给人复制的命令。CLI 只显示，绝不自动执行。" },
+              "shell": { "enum": ["powershell", "cmd", "bash", "zsh", "any"] },
+              "risk": { "enum": ["read-only", "low", "medium", "high"] },
+              "rollback": { "type": "string", "maxLength": 300, "description": "risk 非 read-only 时必须写：怎么撤回这一步。" }
+            }
+          }
+        },
+        "verify": { "type": "string", "minLength": 4, "maxLength": 300, "description": "怎么证明真修好了。退出码为 0 不算。" },
+        "auto": { "type": "boolean", "default": false, "description": "U-King 能否作为白名单动作一键做掉。默认 false。" },
+        "uking_action": { "type": "string", "maxLength": 60, "description": "auto=true 时对应的影核动作 ID。" }
+      }
+    },
+    "evidence": {
+      "enum": ["field", "upstream-issue", "reproduced", "reported"],
+      "description": "field=我们在真实客户机上验过；reproduced=我们复现过；upstream-issue=上游 issue 记录，我们未复现；reported=仅用户报告。"
+    },
+    "verified_on": {
+      "type": "object",
+      "required": ["date"],
+      "additionalProperties": false,
+      "properties": {
+        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "tool_version": { "type": "string", "maxLength": 60 },
+        "os": { "type": "string", "maxLength": 60 },
+        "note": { "type": "string", "maxLength": 200 }
+      },
+      "description": "上游会改，方案会过期。超过 stale_after_days 的病例在网页和 skill 里自动降级为「仅供参考，勿直接执行」。"
+    },
+    "sources": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 200 } },
+    "uking": { "type": "string", "maxLength": 300, "description": "可选：U-King 里哪一步能替用户做掉这件事。不写等于不导流，别硬塞。" },
+    "tags": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 24 } }
+  }
+}
