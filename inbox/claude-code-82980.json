@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "claude-code.TODO.bug-ide-extension-2-1-220-hangs-the-extension-ho",
+  "tool": "claude-code",
+  "title": "[BUG] IDE extension (2.1.220) hangs the extension host in an infinite Intl.DateT",
+  "symptoms": [
+    "[BUG] IDE extension (2.1.220) hangs the extension host in an infinite Intl.DateTimeFormat loop — prompt spins forever, never renders, RSS climbs to multi-GB"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-01",
+    "note": "自动采集自 claude-code#82980，尚未验证"
+  },
+  "aliases": [
+    "claude-code#82980"
+  ],
+  "sources": [
+    "https://github.com/anthropics/claude-code/issues/82980"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "open",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-07-31",
+    "body_excerpt": "### Preflight Checklist\n\n- [x] I have searched [existing issues](https://github.com/anthropics/claude-code/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug) and this hasn't been reported yet\n- [x] This is a single bug report (please file separate reports for different bugs)\n- [x] I am using the latest version of Claude Code\n\n### What's Wrong?\n\nUsing Claude Code as the IDE extension in Cursor (Remote-WSL), a submitted prompt\nsometimes never returns. The status spinner cycles its words (\"mulling… thinking…\ntransmuting…\") indefinitely — 10+ minutes — and no output is ever rendered.\n\nWhile it hangs, the extension-host `node` process pegs a full CPU core (~90–100%)\nand its RSS climbs unbounded (observed 3 GB → 7 GB before I killed it). The VS Code/\nCursor window's other extensions stall too, and the process is so busy that even\nV8's own inspector (`--inspect`) becomes unresponsive. The only recovery is to\nSIGKILL the extension host and reload the window.\n\nI captured native stacks of the pegged V8 main thread with gdb (the inspector can't\nattach — the loop never yields). Two independent samples both land in the same call\nchain: the extension is constructing `Intl.DateTimeFormat` in a hot"
+  }
+}

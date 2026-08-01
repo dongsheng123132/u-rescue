@@ -77,5 +77,16 @@
     "版本不对",
     "多厂商"
   ],
-  "diagnose_match": "any"
+  "diagnose_match": "any",
+  "falsepositives": [
+    "同一个包管理器会同时放 .cmd 和 .ps1 两个 shim，指向同一个实现，会被数成两个但没有冲突",
+    "nvm / fnm / asdf 这类版本管理器天然会有多份同名命令，属正常现象"
+  ],
+  "differential": [
+    {
+      "case": "claude-code.install.npmrc-bad-prefix",
+      "distinguish": "撞名是找得到但版本/行为不对；prefix 是压根找不到。",
+      "decisive_test": "where/which 输出几行。多行 = 这条。"
+    }
+  ]
 }

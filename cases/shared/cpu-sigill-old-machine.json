@@ -64,5 +64,12 @@
     "闪退",
     "SIGILL",
     "CPU"
+  ],
+  "differential": [
+    {
+      "case": "shared.av.blocks-install",
+      "distinguish": "老 CPU 是文件完好但执行崩；杀软是文件被删。",
+      "decisive_test": "文件在不在 + 事件查看器里的异常代码是不是 0xC000001D。"
+    }
   ]
 }

@@ -61,7 +61,28 @@
       "enum": ["all", "any"],
       "description": "证据怎么算命中。默认 all=全部 evidence 探针都成立才报（严，防误报）；any=任一成立即可，只在多条证据互为替代时才用。"
     },
-    "cause": { "type": "string", "minLength": 10, "maxLength": 900, "description": "为什么会这样。写机制，不写「可能是环境问题」。" },
+    "cause": {
+      "type": "string", "minLength": 10, "maxLength": 900,
+      "description": "★ 机制层：为什么会这样。写机制，不写「可能是环境问题」。这一层是本库最长寿的资产 —— 上游改版会让下面的 fix.steps 过期，但「Windows 上运行中的 exe 被锁住」这类机制十年后依然成立。所以过期只降级 steps，不降级 cause。"
+    },
+    "mechanism_stable": {
+      "type": "boolean", "default": true,
+      "description": "cause 描述的机制是否跨版本稳定。false 表示这个机制本身绑定了某个具体版本的实现（很少见），过期时连 cause 一起降级。"
+    },
+    "differential": {
+      "type": "array", "maxItems": 6,
+      "description": "★ 鉴别诊断：和哪些病例症状像、怎么区分。条目是线性增长的，谁都能抄；鉴别关系随规模平方增长，抄不走。用户看到「连不上」时分不清是代理还是证书还是端点，这一段就是替他分开的。",
+      "items": {
+        "type": "object",
+        "required": ["case", "distinguish"],
+        "additionalProperties": false,
+        "properties": {
+          "case": { "type": "string", "maxLength": 80, "description": "另一条容易混淆的病例 ID。" },
+          "distinguish": { "type": "string", "minLength": 6, "maxLength": 300, "description": "两者的区别是什么。" },
+          "decisive_test": { "type": "string", "maxLength": 300, "description": "能一刀切开两者的那个观察或命令。写得出来才算真的分清了。" }
+        }
+      }
+    },
     "fix": {
       "type": "object",
       "required": ["steps", "verify"],
@@ -102,6 +123,17 @@
         "note": { "type": "string", "maxLength": 200 }
       },
       "description": "上游会改，方案会过期。超过 stale_after_days 的病例在网页和 skill 里自动降级为「仅供参考，勿直接执行」。"
+    },
+    "falsepositives": {
+      "type": "array", "maxItems": 8,
+      "items": { "type": "string", "minLength": 4, "maxLength": 240 },
+      "description": "★ 什么情况下这条会误判（借鉴 SigmaHQ/sigma 的 falsepositives）。每发生一次误报就往里加一条 —— 这个字段只增不减，是本库随时间增值最快的部分。写了探针的病例必须写，因为探针一定会误报，区别只在于你有没有承认。"
+    },
+    "aliases": {
+      "type": "array", "maxItems": 12,
+      "items": { "type": "string", "maxLength": 80 },
+      "description": "★ 交叉引用（借鉴 rustsec/advisory-db 与 OSV）。形如 codex#30538 / claude-code#80810 / uking#123。自动采集靠它去重 —— 没有 alias，同一个上游 issue 会被反复抓成新病例。★ 只放「这条病例讲的就是那个 issue」的主题来源；旁证、相关阅读放 sources。同一个 alias 出现在两条病例上 CI 会报错，因为那说明一个上游问题被拆成了两条，或者你把旁证当成了主题。",
+      "examples": [["codex#30538", "CVE-2024-0001"]]
     },
     "sources": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 200 } },
     "uking": { "type": "string", "maxLength": 300, "description": "可选：U-King 里哪一步能替用户做掉这件事。不写等于不导流，别硬塞。" },

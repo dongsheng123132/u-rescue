@@ -67,5 +67,20 @@
     "npm",
     "404",
     "镜像"
+  ],
+  "aliases": [
+    "codex#31936"
+  ],
+  "differential": [
+    {
+      "case": "codex.install.bigbinary-slow-net",
+      "distinguish": "404 是服务器上没有这个文件，秒失败；慢网是卡很久才超时。",
+      "decisive_test": "看失败得快还是慢。几秒内报 404 = 这条；卡几分钟后 ETIMEDOUT = 慢网那条。"
+    },
+    {
+      "case": "shared.av.blocks-install",
+      "distinguish": "404 是根本没下下来；杀软是下下来了又被删。",
+      "decisive_test": "查杀软隔离区。有记录就是杀软那条。"
+    }
   ]
 }

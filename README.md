@@ -33,6 +33,29 @@ npx u-rescue doctor --json
 
 ---
 
+## 病例从哪来（收集机制）
+
+```
+GitHub (openai/codex)           ─┐
+GitHub (anthropics/claude-code)  ├─→ harvest ─→ inbox/ 草稿 ─→ 人工补解法+验证 ─→ cases/
+我们自己的客户机排障（强制脱敏） ─┘                          ↑ 这一步不能自动化
+```
+
+```bash
+npm run harvest                              # 从上游 issue 采集候选
+npm run harvest -- --source codex --limit 30
+```
+
+**采集永远不直接写进病例库。** 抓来的 issue 通常只有症状、没有验证过的解法 ——
+直接当病例发出去等于让用户扑空，比没有这条更坏。草稿必须由人补上机制和方案、
+验证过，才移进 `cases/`。补不出解法的就留在 inbox 里。
+
+分类器宁可漏不可滥：强信号（错误码、`command not found`、`装不上`）命中一条即收，
+弱信号要凑够两条，功能请求形状的标题直接排除。实测 25 条上游 issue 放行 2 条。
+
+去重靠 `aliases`（`codex#30538` 这种），CI 会查重复 —— 没有它，同一个 issue
+每次采集都会被抓成新病例。
+
 ## 它为什么值得信
 
 这类库最容易变成「一堆看着有理、实则没人验证过的偏方」。我们用四条硬约束挡住：
@@ -54,6 +77,16 @@ npx u-rescue doctor --json
 
 **④ 每个会改机器的步骤都必须写撤回办法。**
 这是 CI 强制的，写了 `risk: low/medium/high` 却没写 `rollback` 的 PR 直接挂。
+
+**⑤ 承认误报。**
+写了探针的病例必须写 `falsepositives`（这个字段抄自 [SigmaHQ/sigma](https://github.com/SigmaHQ/sigma)）：
+什么情况下这条会误判。探针一定会在某些正常机器上亮，区别只在于你有没有承认。
+**这个字段只增不减 —— 每误报一次加一条，是本库随时间增值最快的部分。**
+
+**⑥ 鉴别诊断。**
+症状像的病例之间互相链接，写清「区别是什么」和「哪个观察能一刀切开」。
+用户看到「连不上」根本分不清是代理、证书还是端点不兼容，这一段就是替他分开的。
+条目谁都能抄，鉴别关系随规模平方增长，抄不走。
 
 安全上还有一条边界：**探针永远不接受可执行内容**。病例 JSON 里只能用白名单探针，
 `cmd_ok` 的可执行名必须命中 `SAFE_BINS`。就算这个仓库被投毒，最坏也只是给出一条错误建议，
@@ -79,7 +112,19 @@ node scripts/validate.mjs
 **我们最想要的不是「又一个报错」，是「这个报错的根因和验证过的解法」。**
 只有报错没有解法的，欢迎开 issue，但它不会直接进病例库。
 
-详见 [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)。
+详见 [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)，
+完整规范（字段定义、采集流程、接入方式、导流边界）见 [docs/SPEC.md](docs/SPEC.md)。
+
+## 站在谁的肩膀上
+
+这类结构化知识库有成熟范式，我们照着抄而不是自创：
+
+| 项目 | 抄了什么 |
+|---|---|
+| [SigmaHQ/sigma](https://github.com/SigmaHQ/sigma) | `falsepositives` 字段；一份规则编译到多个后端 |
+| [rustsec/advisory-db](https://github.com/rustsec/advisory-db) | `aliases` 交叉引用；一条一文件 + CI 校验 + PR 入库 |
+| [google/osv.dev](https://github.com/google/osv.dev) | 多源自动 ingestion → 归一化 → 人工审核 |
+| [github/advisory-database](https://github.com/github/advisory-database) | 「自动收 + 人工过」两段式 |
 
 ---
 
@@ -91,6 +136,7 @@ node scripts/validate.mjs
 |---|---|---|
 | `npm run build:site` | `dist/site/` 静态中文网页 + `sitemap.xml` + `cases.json` | 小白（搜索/AI 问答进来的人） |
 | `npm run build:skill` | `dist/skill/SKILL.md` + `AGENTS.md` + `manifest.json` | 装进 Claude Code / Codex，或上架技能市场 |
+| `npm run build:uking` | `dist/uking/` 热下发 JSON（两种格式） | U-King 图形界面版 |
 | `npx u-rescue` | 命令行只读诊断 | 开发者、远程排障、AI 调用 |
 
 网页带 JSON-LD 结构化数据（`TechArticle` + `Question/Answer`），

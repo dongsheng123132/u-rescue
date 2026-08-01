@@ -79,5 +79,19 @@
     "杀毒软件",
     "梯子",
     "TLS"
+  ],
+  "aliases": [
+    "claude-code#74369",
+    "claude-code#24470"
+  ],
+  "falsepositives": [
+    "单纯断网、被墙、DNS 挂了也会让这个探针失败，不一定是证书问题。要看到证书相关的报错才算数"
+  ],
+  "differential": [
+    {
+      "case": "claude-code.net.connection-error",
+      "distinguish": "这条一定会提到证书；那条不提。",
+      "decisive_test": "curl 看 issuer 是谁签的。出现杀软/梯子的名字就是这条。"
+    }
   ]
 }

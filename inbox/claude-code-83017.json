@@ -1,0 +1,54 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "claude-code.TODO.bug-claude-desktop-code-tab-ssh-connection-fails",
+  "tool": "claude-code",
+  "title": "[BUG] Claude Desktop Code tab SSH connection fails with \"All configured authenti",
+  "symptoms": [
+    "[BUG] Claude Desktop Code tab SSH connection fails with \"All configured authentication methods failed\" — offers zero keys to server (Windows)"
+  ],
+  "errors": [
+    "All configured authentication methods failed",
+    "Server-side sshd verbose log (every failed attempt shows this identical",
+    "No \"Failed publickey\" line ever appears, which sshd logs for any offered"
+  ],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-01",
+    "note": "自动采集自 claude-code#83017，尚未验证"
+  },
+  "aliases": [
+    "claude-code#83017"
+  ],
+  "sources": [
+    "https://github.com/anthropics/claude-code/issues/83017"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "open",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-07-31",
+    "body_excerpt": "### Preflight Checklist\n\n- [x] I have searched [existing issues](https://github.com/anthropics/claude-code/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug) and this hasn't been reported yet\n- [x] This is a single bug report (please file separate reports for different bugs)\n- [x] I am using the latest version of Claude Code\n\n### What's Wrong?\n\nThe Code tab's SSH connection to a remote server consistently fails with\n\"All configured authentication methods failed,\" regardless of key format,\npassphrase status, or connection field configuration (host as IP, host as\nSSH-config alias). Server-side verbose logging confirms the client offers\nzero SSH keys on every attempt — not a wrong key, not a malformed key, no\nkey at all.\n\n### What Should Happen?\n\nThe Code tab's SSH client should load and offer the configured private\nkey, matching the behavior of a standard SSH client using the same key\nand path.\n\n### Error Messages/Logs\n\n```shell\nAll configured authentication methods failed\n\nServer-side sshd verbose log (every failed attempt shows this identical\npattern):\nConnection from <client IP> port <port> on <server IP> port 22\nReceived disconnect from <client IP> port <port>:11:  [preauth]\nDisco"
+  }
+}

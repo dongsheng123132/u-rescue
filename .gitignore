@@ -1,5 +1,9 @@
 dist/
 node_modules/
+
+# 私有源（U-King bug 库）采来的草稿：即便已脱敏，也含真实客户机信息。
+# 必须人工逐字复核、确认可公开之后，才手工移进 cases/。绝不自动进版本库。
+inbox/uking-*.json
 *.log
 .DS_Store
 Thumbs.db

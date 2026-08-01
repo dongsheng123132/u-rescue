@@ -72,7 +72,16 @@ function fmtCase(cse, { withFix = false } = {}) {
     });
     lines.push("");
     lines.push(`  ${bold("怎么算修好了：")}${cse.fix.verify}`);
-    if (cse.uking) lines.push(dim(`  省事的话：${cse.uking}`));
+    if (cse.differential?.length) {
+      lines.push("");
+      lines.push(`  ${bold("别跟这些搞混：")}`);
+      for (const d of cse.differential) {
+        lines.push(`   · ${cyan(d.case)}`);
+        lines.push(`     区别：${d.distinguish}`);
+        if (d.decisive_test) lines.push(green(`     一刀切开：${d.decisive_test}`));
+      }
+    }
+    if (cse.uking) lines.push(dim(`\n  省事的话：${cse.uking}`));
     if (cse.sources?.length) lines.push(dim(`  出处：${cse.sources.join("  ")}`));
   }
   return lines.join("\n");
@@ -160,6 +169,12 @@ async function cmdDoctor(cases) {
       const mark = p.role === "evidence" ? (isHit ? red("✗") : green("✓")) : dim("·");
       const note = p.role === "evidence" && isHit ? red(" ← 就是这里") : "";
       out(`      ${mark} ${p.label}：${redact(p.detail)}${note}`);
+    }
+    // 误报可能性和命中一起给出 —— 只报「你中招了」不报「什么时候这是正常的」，
+    // 就是把误判的代价转嫁给用户。
+    if (r.case.falsepositives?.length) {
+      out(yellow(`      ⚠ 以下情况这条是误报：`));
+      r.case.falsepositives.forEach((f) => out(dim(`        · ${f}`)));
     }
     out(dim(`      看完整修复方案：npx u-rescue show ${r.case.id}`));
     out("");

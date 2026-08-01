@@ -64,5 +64,15 @@
     "nvm",
     "WSL",
     "command not found"
+  ],
+  "aliases": [
+    "codex#13566"
+  ],
+  "differential": [
+    {
+      "case": "claude-code.install.npmrc-bad-prefix",
+      "distinguish": "nvm 那条是**你自己敲能跑、AI 敲不能**；prefix 那条是你自己敲也不行。",
+      "decisive_test": "在自己的终端里敲同一条命令。你能跑 AI 不能 = nvm 这条。"
+    }
   ]
 }

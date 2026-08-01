@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "claude-code.TODO.bug-one-account-wide-skills-library-is-applied-t",
+  "tool": "claude-code",
+  "title": "[BUG] One account-wide Skills library is applied to three environments with diff",
+  "symptoms": [
+    "[BUG] One account-wide Skills library is applied to three environments with different capabilities — chat-authored rules leak into Claude Code (web) and override native tooling, producing incorrect re"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-01",
+    "note": "自动采集自 claude-code#83061，尚未验证"
+  },
+  "aliases": [
+    "claude-code#83061"
+  ],
+  "sources": [
+    "https://github.com/anthropics/claude-code/issues/83061"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "open",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-08-01",
+    "body_excerpt": "### Preflight Checklist\n\n- [x] I have searched [existing issues](https://github.com/anthropics/claude-code/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug) and this hasn't been reported yet\n- [x] This is a single bug report (please file separate reports for different bugs)\n- [x] I am using the latest version of Claude Code\n\n### What's Wrong?\n\nOne account-level Skills library is applied to three environments that do not have the same capabilities: **claude.ai Chat**, **Cowork**, and **Claude Code on the web**. Skills authored under one environment's constraints are injected into the others and acted upon, even when the premise they state about the environment is false there.\n \nThe environments are not interchangeable:\n \n| | claude.ai Chat | Cowork | Claude Code (web) |\n|---|---|---|---|\n| Runtime | container sandbox | container sandbox | managed VM on a repo |\n| Language toolchains | preinstalled only | preinstalled only | full (`cargo`, lockfile, registry cache) |\n| Version control | none | none | git |\n| Deleting a file | unrecoverable | unrecoverable | recoverable via git |\n| Unit of delivery | chat artifact | document / file output | commit, branch, PR |\n \n**Concrete failure.**"
+  }
+}

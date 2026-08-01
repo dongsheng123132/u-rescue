@@ -65,5 +65,12 @@
     "慢网",
     "镜像",
     "超时"
+  ],
+  "differential": [
+    {
+      "case": "codex.install.npm-subpackage-404",
+      "distinguish": "慢网卡很久才断；404 秒失败。",
+      "decisive_test": "失败耗时。"
+    }
   ]
 }

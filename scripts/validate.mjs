@@ -90,6 +90,22 @@ const EXTRA_RULES = [
     },
   },
   {
+    // 抄自 SigmaHQ：探针一定会误报，区别只在于你有没有承认。
+    name: "有证据探针就必须写 falsepositives",
+    check: (c) => {
+      const hasEvidence = (c.diagnose ?? []).some((p) => p.role === "evidence");
+      return hasEvidence && !c.falsepositives?.length
+        ? ["写了 evidence 探针却没写 falsepositives —— 探针一定会在某些正常机器上亮，不写出来就是让用户替你承担误判"]
+        : [];
+    },
+  },
+  {
+    name: "鉴别诊断引用的病例必须真实存在",
+    check: (c, all) => (c.differential ?? [])
+      .filter((d) => !all.some((x) => x.id === d.case))
+      .map((d) => `differential 指向 ${d.case}，但这条病例不存在（改名了？）`),
+  },
+  {
     name: "any 模式只在多条证据时才有意义",
     check: (c) => {
       const ev = (c.diagnose ?? []).filter((p) => p.role === "evidence");
@@ -120,7 +136,13 @@ for (const cse of cases) {
   checkShape(clean, schema, "", id);
 
   for (const rule of EXTRA_RULES) {
-    for (const msg of rule.check(cse) ?? []) fail(id, `[${rule.name}] ${msg}`);
+    for (const msg of rule.check(cse, cases) ?? []) fail(id, `[${rule.name}] ${msg}`);
+  }
+
+  // alias 重复 = 同一个上游 issue 被抓成了两条病例。自动采集最容易犯这个。
+  for (const a of cse.aliases ?? []) {
+    const dup = cases.find((x) => x.id !== cse.id && (x.aliases ?? []).includes(a));
+    if (dup) fail(id, `alias ${a} 和 ${dup.id} 重复 —— 同一个上游来源被收成了两条病例`);
   }
 
   // 过期不算失败 —— 它是事实，不是 bug。但必须说出来，否则「全绿」会骗人。

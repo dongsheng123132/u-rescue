@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    - cron: "17 1 * * 1" # 每周一采集一次上游
+  workflow_dispatch:
 
 jobs:
   validate:
@@ -21,10 +24,11 @@ jobs:
       - name: 冒烟测试（CLI 真跑一遍）
         run: node scripts/smoke.mjs
 
-      - name: 生成产物（确认三个消费端都不炸）
+      - name: 生成产物（确认四个消费端都不炸）
         run: |
           node scripts/build-site.mjs
           node scripts/build-skill.mjs
+          node scripts/build-uking-feed.mjs
 
   # 病例会过期。每周提醒一次哪些该复核了，而不是等它们悄悄烂掉。
   staleness:
@@ -37,3 +41,47 @@ jobs:
           node-version: 22
       - name: 列出超期未复核的病例
         run: node scripts/validate.mjs 2>&1 | grep -A100 '提醒' || echo "没有超期病例"
+
+  # 每周从上游采集候选，开成 PR 等人补解法。
+  # 注意：只采公开源，且只落 inbox/ —— 自动化到「候选」为止，
+  # 「补机制 + 验证 + 定可信度」这一步永远由人做，那正是这个库的价值所在。
+  harvest:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 采集上游 issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/harvest.mjs --limit 60 || true
+
+      - name: 有新草稿就开 PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "$(git status --porcelain inbox/)" ]; then
+            echo "没有新草稿，不开 PR。"
+            exit 0
+          fi
+          BRANCH="harvest/$(date +%Y-%m-%d)"
+          git config user.name  "u-rescue-harvest"
+          git config user.email "noreply@github.com"
+          git checkout -b "$BRANCH"
+          git add inbox/
+          git commit -m "chore(harvest): 本周上游候选病例"
+          git push -u origin "$BRANCH"
+          gh pr create --title "本周采集：待补解法的候选病例" --body \
+            "自动从上游 issue 采集的候选，**全部还没有验证过的解法**。
+
+          合并前每条都要：补 \`cause\`（机制）→ 补 \`fix.steps\`（含 rollback）→ 补 \`fix.verify\` →
+          自己验证一遍并把 \`evidence\` 从 \`reported\` 改成 \`reproduced\`/\`field\` → 移进 \`cases/\`。
+
+          补不出解法的直接从这个 PR 里删掉，让它留在上游就好 ——
+          没有解法的病例对用户是负价值。"

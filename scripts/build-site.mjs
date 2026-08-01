@@ -115,6 +115,21 @@ function casePage(c) {
 
   parts.push(`<h2>怎么算真修好了</h2><p>${esc(c.fix.verify)}</p>`);
 
+  if (c.differential?.length) {
+    parts.push(`<h2>别跟这些搞混</h2>`);
+    parts.push(`<p style="color:var(--dim);font-size:14px">症状像但根因不同的病例。先分清再动手，不然会在错的地方反复修。</p>`);
+    parts.push(`<ul>${c.differential.map((d) => `<li>
+      <a href="./${esc(d.case)}.html"><code>${esc(d.case)}</code></a><br>
+      <strong>区别：</strong>${esc(d.distinguish)}
+      ${d.decisive_test ? `<br><strong>一刀切开：</strong>${esc(d.decisive_test)}` : ""}
+    </li>`).join("")}</ul>`);
+  }
+
+  if (c.falsepositives?.length) {
+    parts.push(`<h2>什么情况下这条是误报</h2>`);
+    parts.push(`<ul>${c.falsepositives.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>`);
+  }
+
   parts.push(`<div class="cta">
     <strong>自己修不下去？</strong><br>
     命令行一键排查（只读，不动你的机器）：<code>npx u-rescue doctor</code><br>

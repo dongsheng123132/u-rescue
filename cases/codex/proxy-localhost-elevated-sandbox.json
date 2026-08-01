@@ -88,5 +88,19 @@
     "梯子",
     "沙箱",
     "Windows"
+  ],
+  "aliases": [
+    "codex#30538"
+  ],
+  "falsepositives": [
+    "挂本地代理本身完全正常。只有在同时用了 elevated 沙箱、且真的弹了模块错误时才算命中",
+    "config.toml 里已经是 sandbox = \"unelevated\" 的机器不受此影响，探针仍会亮"
+  ],
+  "differential": [
+    {
+      "case": "codex.proxy.websocket-system-proxy",
+      "distinguish": "沙箱那条是**完全不能用**（弹窗、命令跑不了）；WebSocket 那条是**能用但慢**。",
+      "decisive_test": "命令到底跑不跑得起来。跑得起来只是慢 = WebSocket 那条。"
+    }
   ]
 }

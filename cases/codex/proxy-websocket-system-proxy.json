@@ -51,5 +51,15 @@
     "慢",
     "WebSocket",
     "Windows"
+  ],
+  "aliases": [
+    "codex#29958"
+  ],
+  "differential": [
+    {
+      "case": "codex.proxy.localhost-elevated-sandbox",
+      "distinguish": "这条只是慢，那条根本用不了。",
+      "decisive_test": "有没有弹「找不到指定的模块」。"
+    }
   ]
 }

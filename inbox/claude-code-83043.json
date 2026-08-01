@@ -1,0 +1,52 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "claude-code.TODO.bug-claude-code-disable-refusal-fallback-1-arms-",
+  "tool": "claude-code",
+  "title": "[BUG] CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK=1 arms the silent refusal-fallback pa",
+  "symptoms": [
+    "[BUG] CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK=1 arms the silent refusal-fallback path instead of disabling it (2.1.220)"
+  ],
+  "errors": [
+    "B=~/.local/share/claude/versions/2.1.220"
+  ],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-01",
+    "note": "自动采集自 claude-code#83043，尚未验证"
+  },
+  "aliases": [
+    "claude-code#83043"
+  ],
+  "sources": [
+    "https://github.com/anthropics/claude-code/issues/83043"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "open",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-08-01",
+    "body_excerpt": "### Preflight Checklist\n\n- [x] I have searched [existing issues](https://github.com/anthropics/claude-code/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug) and this hasn't been reported yet\n- [x] This is a single bug report (please file separate reports for different bugs)\n- [x] I am using the latest version of Claude Code\n\n### What's Wrong?\n\nVersion: 2.1.220, linux-x64\n\nAlso filed via `/bug`: feedback ID `eafd0990-7ac8-4545-8391-30fb6dddcae0` (that report has the\nfull session transcript with the raw dumps)\nRelated, but not a duplicate\n\nExisting issues report the symptoms of silent refusal fallback. None identifies the mechanism, and\nnone mentions `CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK` .\n\nThis issue is about that env var not working:\n\n#82319 — 17 documented silent Fable 5 → Opus reroutes; notification promise not honored\n#67246 — notice shown, but `/model` cannot override (open since 2026-06-10, 11 comments)\n#76660 — silent degradation in desktop app; `/model` switch-back reverts next turn\n#67469 — same complaint, auto-closed as duplicate of #67246 by bot after 3 days\n#34281 — fallback notification behavior undocumented\n\nAnthropic's published page states: \"Users will be notified i"
+  }
+}

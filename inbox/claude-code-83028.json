@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "claude-code.TODO.claude-desktop-msix-crash-on-intel-integrated-gp",
+  "tool": "claude-code",
+  "title": "Claude Desktop MSIX crash on Intel integrated GPU during browser pane use — repr",
+  "symptoms": [
+    "Claude Desktop MSIX crash on Intel integrated GPU during browser pane use — reproducible, no workaround available"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-01",
+    "note": "自动采集自 claude-code#83028，尚未验证"
+  },
+  "aliases": [
+    "claude-code#83028"
+  ],
+  "sources": [
+    "https://github.com/anthropics/claude-code/issues/83028"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "open",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-08-01",
+    "body_excerpt": "### Preflight Checklist\n\n- [x] I have searched [existing issues](https://github.com/anthropics/claude-code/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug) and this hasn't been reported yet\n- [x] This is a single bug report (please file separate reports for different bugs)\n- [x] I am using the latest version of Claude Code\n\n### What's Wrong?\n\nClaude Desktop version: 1.24012.9.0 (MSIX package Claude_1.24012.9.0_x64__pzs8sxrjxfjjc)\nOS: Windows 10 22H2\nGPU: Intel HD Graphics (single integrated GPU, no discrete GPU)\n\nWhat happened:\nApp worked normally for two months on this machine. After a recent update (installer moved to MSIX packaging), the app started crashing repeatedly, specifically when using the internal browser pane. After a crash, the app fails to reopen, and the AppX package status becomes Modified, NeedsRemediation (confirmed via Get-AppxPackage). Only a full uninstall/reinstall temporarily restores functionality — the same crash pattern then recurs (documented on 2026-07-14 and multiple times on 2026-07-31).\n\nDiagnostics performed:\n\nGet-AppxPackage confirms Status: Modified, NeedsRemediation after each crash.\nWindows \"Repair\" option and manual re-registration via Add-App"
+  }
+}

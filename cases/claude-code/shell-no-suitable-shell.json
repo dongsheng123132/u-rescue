@@ -86,5 +86,12 @@
     "Git Bash",
     "Windows",
     "环境变量"
+  ],
+  "aliases": [
+    "claude-code#80810",
+    "claude-code#73461"
+  ],
+  "falsepositives": [
+    "靠 WSL 提供 shell 的机器，Windows 侧 PATH 上确实没有 bash，但 Claude 走 WSL 完全正常"
   ]
 }

@@ -70,5 +70,22 @@
     "代理",
     "流式",
     "掉线"
+  ],
+  "aliases": [
+    "claude-code#4297",
+    "claude-code#81847",
+    "claude-code#82994"
+  ],
+  "differential": [
+    {
+      "case": "claude-code.net.self-signed-certificate",
+      "distinguish": "证书那条会明说 self-signed / certificate；这条只说 connection error，不提证书。",
+      "decisive_test": "看报错原文里有没有 certificate 字样。有就走证书那条，别在这里瞎调代理。"
+    },
+    {
+      "case": "codex.api.responses-only-thirdparty",
+      "distinguish": "端点不兼容是稳定的 404/400，每次都一样；网络问题是时好时坏。",
+      "decisive_test": "连发五次。次次同样报错 = 端点问题；有成有败 = 网络问题。"
+    }
   ]
 }

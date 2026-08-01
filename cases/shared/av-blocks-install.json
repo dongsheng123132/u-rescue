@@ -63,5 +63,17 @@
     "误报",
     "文件损坏",
     "装不上"
+  ],
+  "differential": [
+    {
+      "case": "shared.cpu.sigill-old-machine",
+      "distinguish": "杀软是文件消失/装不完；老 CPU 是装得好好的但一启动就闪退。",
+      "decisive_test": "文件还在不在。文件在但跑不起来 = 老 CPU 那条。"
+    },
+    {
+      "case": "codex.install.bigbinary-slow-net",
+      "distinguish": "杀软删文件 vs 网络没下完，两者都表现为文件不完整。",
+      "decisive_test": "比对文件哈希 + 查隔离区。"
+    }
   ]
 }

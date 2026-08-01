@@ -103,6 +103,19 @@ function caseSection(c) {
   });
   L.push("");
   L.push(`**验证（必须做）：** ${c.fix.verify}`);
+  if (c.differential?.length) {
+    L.push("");
+    L.push(`**⚠️ 下结论前先排除这几条（症状像，根因不同）：**`);
+    c.differential.forEach((d) => {
+      L.push(`- \`${d.case}\` —— ${d.distinguish}`);
+      if (d.decisive_test) L.push(`  - **一刀切开：** ${d.decisive_test}`);
+    });
+  }
+  if (c.falsepositives?.length) {
+    L.push("");
+    L.push(`**这条什么时候是误报（别把正常机器判成有病）：**`);
+    c.falsepositives.forEach((f) => L.push(`- ${f}`));
+  }
   if (c.sources?.length) L.push(`\n**出处：** ${c.sources.join(" · ")}`);
   L.push("");
   L.push("---");

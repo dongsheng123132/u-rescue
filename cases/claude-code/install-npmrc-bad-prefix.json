@@ -98,5 +98,24 @@
     "npm",
     "prefix",
     "命令找不到"
+  ],
+  "aliases": [
+    "claude-code#79031"
+  ],
+  "falsepositives": [
+    "刚改完 PATH 但没重开终端，当前进程读到的还是旧 PATH",
+    "用 nvm / fnm 管理 Node 时 prefix 是随版本动态变的，可能被判成不在 PATH 上"
+  ],
+  "differential": [
+    {
+      "case": "shared.pm.command-hijacked",
+      "distinguish": "prefix 问题是命令**根本找不到**；撞名是命令**找得到但不是你要的那个**。",
+      "decisive_test": "where/which 有没有输出。完全没有 = prefix；有多行 = 撞名。"
+    },
+    {
+      "case": "shared.win.path-broken-system32",
+      "distinguish": "prefix 只影响 npm 装的命令；PATH 坏了连系统自带命令都没。",
+      "decisive_test": "敲 where（Windows）本身在不在。它都没了就先修 PATH。"
+    }
   ]
 }

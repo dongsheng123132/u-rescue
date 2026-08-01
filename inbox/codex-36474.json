@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.windows-terminal-no-alt-screen-retains-only-one-",
+  "tool": "codex",
+  "title": "Windows Terminal: --no-alt-screen retains only one viewport and does not preserv",
+  "symptoms": [
+    "Windows Terminal: --no-alt-screen retains only one viewport and does not preserve scrollback"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-01",
+    "note": "自动采集自 codex#36474，尚未验证"
+  },
+  "aliases": [
+    "codex#36474"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/issues/36474"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 0,
+    "created": "2026-08-01",
+    "body_excerpt": "### What version of Codex CLI is running?\n\n0.146.0\n\n### What subscription do you have?\n\nWindows Terminal: --no-alt-screen retains only one viewport and does not preserve scrollback\n\n### Which model were you using?\n\ngpt-5.6-sol,gpt-5.6-terra\n\n### What platform is your computer?\n\nMicrosoft Windows NT 10.0.22621.0 x64\n\n### What terminal emulator and version are you using (if applicable)?\n\nWindows Terminal, running PowerShell 7.6.3, without tmux/zellij/WSL.\n\n### Codex doctor report\n\n```json\n{\n  \"schemaVersion\": 1,\n  \"generatedAt\": \"1785588838s since unix epoch\",\n  \"overallStatus\": \"fail\",\n  \"codexVersion\": \"0.146.0\",\n  \"checks\": {\n    \"app_server.status\": {\n      \"id\": \"app_server.status\",\n      \"category\": \"app-server\",\n      \"status\": \"ok\",\n      \"summary\": \"background server is not running\",\n      \"details\": {\n        \"control socket\": \"C:\\\\Users\\\\27942\\\\.codex\\\\app-server-control\\\\app-server-control.sock\",\n        \"daemon state dir\": \"C:\\\\Users\\\\27942\\\\.codex\\\\app-server-daemon\",\n        \"mode\": \"ephemeral\",\n        \"pid file\": \"C:\\\\Users\\\\27942\\\\.codex\\\\app-server-daemon\\\\app-server.pid (missing)\",\n        \"settings\": \"C:\\\\Users\\\\27942\\\\.codex\\\\app-server-daemon\\\\settings.json (mi"
+  }
+}

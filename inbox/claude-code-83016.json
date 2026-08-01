@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "claude-code.TODO.bug-webfetch-to-arthive-com-crashes-and-corrupts",
+  "tool": "claude-code",
+  "title": "[BUG] WebFetch to arthive.com crashes and corrupts Claude Desktop install (Windo",
+  "symptoms": [
+    "[BUG] WebFetch to arthive.com crashes and corrupts Claude Desktop install (Windows)"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-01",
+    "note": "自动采集自 claude-code#83016，尚未验证"
+  },
+  "aliases": [
+    "claude-code#83016"
+  ],
+  "sources": [
+    "https://github.com/anthropics/claude-code/issues/83016"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "open",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-07-31",
+    "body_excerpt": "### Preflight Checklist\n\n- [x] I have searched [existing issues](https://github.com/anthropics/claude-code/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug) and this hasn't been reported yet\n- [x] This is a single bug report (please file separate reports for different bugs)\n- [x] I am using the latest version of Claude Code\n\n### What's Wrong?\n\n## Summary\nWhen Claude (running in Claude Desktop) attempts to WebFetch a page on arthive.com, the app crashes. This has happened 3+ times. Unlike an ordinary WebFetch hang/timeout, the crash leaves the local app state corrupted — the app cannot simply be relaunched and requires a full uninstall/reinstall to recover, which wipes local app data (chat history, settings) because the underlying Windows package removal is non-data-preserving (see install log details below).\n\n## Environment\n- OS: Windows 10 (build 10.0.19045), Windows edition: Core\n- App: Claude Desktop, MSIX package `Claude_pzs8sxrjxfjjc`\n- Installer build: `03c61d06f8e01a4db2273b9514e225f21d2ba62e`\n- Affected versions seen in logs: 1.24012.1.0, 1.24012.9.0\n\n## Steps to Reproduce\n1. In Claude Desktop, ask Claude to fetch/access a page on arthive.com (via WebFetch tool).\n2. App han"
+  }
+}
