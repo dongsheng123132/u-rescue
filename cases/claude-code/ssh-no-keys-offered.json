@@ -1,0 +1,87 @@
+{
+  "id": "claude-code.ssh.no-keys-offered",
+  "tool": "claude-code",
+  "title": "连远程服务器报「All configured authentication methods failed」，密钥换了几遍都不行",
+  "symptoms": [
+    "填了私钥路径还是连不上远程服务器",
+    "同一个密钥用普通 SSH 客户端连是好的",
+    "换了密钥格式、重新生成、去掉密码短语，全都没用",
+    "改成用 IP 或用 SSH 配置里的别名，结果一样"
+  ],
+  "errors": [
+    "All configured authentication methods failed",
+    "Received disconnect from",
+    "[preauth]"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "severity": "major",
+  "cause": "「认证方式全部失败」这句话有两种完全不同的含义，而它们的修法相反：① 客户端**提交了**密钥，服务器拒绝了（密钥不对、没授权、权限不对）；② 客户端**一个密钥都没提交**（根本没读到你的密钥文件）。绝大多数人默认是第一种，于是花几个小时反复换密钥——但如果是第二种，换一百个密钥都没用，因为它们压根没被送出去。区分两者只需要看服务器端的 sshd 日志：只要客户端提交过任何密钥（哪怕是错的），sshd 一定会记一行 `Failed publickey`；**如果日志里从头到尾没有这一行，就是第二种**，问题在客户端读不到密钥，不在你的密钥本身。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "第一刀：拿标准 SSH 客户端用**同一个密钥、同一个路径**连一次。这一步能立刻分开「你的密钥有问题」和「这个工具的 SSH 有问题」。",
+        "cmd": "ssh -v -i \"你的私钥完整路径\" 用户名@服务器地址",
+        "shell": "any",
+        "risk": "read-only"
+      },
+      {
+        "desc": "标准 ssh 能连上 → 你的密钥、权限、服务器授权全都没问题，是这个工具的 SSH 客户端没读到密钥。别再动你的密钥了。",
+        "risk": "read-only"
+      },
+      {
+        "desc": "标准 ssh 也连不上 → 看 -v 输出里 \"Offering public key\" 那几行。完全没有就是本地读不到密钥（路径错/权限错）；有但被拒就是服务器端没授权。",
+        "risk": "read-only"
+      },
+      {
+        "desc": "能登服务器的话，看 sshd 日志确认客户端到底提交没提交密钥。有 Failed publickey = 提交了；一行都没有 = 一个都没提交。",
+        "cmd": "sudo journalctl -u sshd -n 50",
+        "shell": "bash",
+        "risk": "read-only"
+      },
+      {
+        "desc": "绕开办法：把密钥加进 ssh-agent，让工具通过 agent 拿密钥，而不是自己读文件。这条对「客户端读不到密钥文件」类问题通常直接有效。",
+        "cmd": "ssh-add \"你的私钥完整路径\"",
+        "shell": "any",
+        "risk": "low",
+        "rollback": "ssh-add -d \"你的私钥完整路径\" 把它从 agent 里移除。"
+      },
+      {
+        "desc": "Windows 上还要注意：私钥路径带空格或中文时，一些客户端会读不到。把密钥放到纯英文短路径（如 C:\\ssh\\id_ed25519）再试一次。",
+        "risk": "low",
+        "rollback": "把密钥文件挪回原位置即可（拷贝，不要剪切）。"
+      }
+    ],
+    "verify": "在工具里成功连上远程服务器；或者退一步，服务器 sshd 日志里出现了 Accepted publickey。",
+    "auto": false
+  },
+  "differential": [
+    {
+      "case": "claude-code.auth.401-invalid-credentials",
+      "distinguish": "这条是连远程服务器（SSH）失败；401 那条是调模型 API 失败。两者都叫「认证失败」，但完全不相干。",
+      "decisive_test": "看是连服务器时报的，还是发消息时报的。"
+    }
+  ],
+  "evidence": "upstream-issue",
+  "verified_on": {
+    "date": "2026-08-01",
+    "tool_version": "Claude Desktop Code tab",
+    "os": "Windows",
+    "note": "⚠️ 上游 issue 仍 open，**官方还没有修复**。这条给的不是修好它的办法，而是①帮你确认问题不在你的密钥上（省下反复换密钥的时间）②给出 ssh-agent 这条绕行路。我们没有复现过。"
+  },
+  "aliases": [
+    "claude-code#83017"
+  ],
+  "sources": [
+    "https://github.com/anthropics/claude-code/issues/83017"
+  ],
+  "tags": [
+    "SSH",
+    "认证失败",
+    "远程",
+    "密钥"
+  ]
+}

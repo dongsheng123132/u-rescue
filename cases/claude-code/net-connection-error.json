@@ -6,14 +6,17 @@
     "一发消息就报 Connection error",
     "回答写到一半突然断了，提示连接中途关闭",
     "时好时坏，重试几次能成一次",
-    "网页版能用，命令行版不行"
+    "网页版能用，命令行版不行",
+    "越用到后面越频繁，一开始好好的",
+    "断了之后卡很久（好几分钟）才自己恢复"
   ],
   "errors": [
     "API Error (Connection error.)",
     "Connection closed mid-response",
     "ECONNRESET",
     "fetch failed",
-    "terminated"
+    "terminated",
+    "Unable to connect to API (ECONNRESET)"
   ],
   "platforms": [
     "windows",
@@ -32,6 +35,10 @@
         "desc": "一发就断 → 先验基础连通性。Windows 用系统自带 curl：",
         "cmd": "curl -sS -o NUL -w \"%{http_code} %{time_total}s\\n\" https://api.anthropic.com/",
         "shell": "cmd",
+        "risk": "read-only"
+      },
+      {
+        "desc": "注意一个容易走弯路的点：curl 能秒通**不代表**没问题。curl 是一次短请求，而出问题的是长时间的流式连接。上游报告者用 curl 验通了仍然照断，所以别拿 curl 通过就排除网络。",
         "risk": "read-only"
       },
       {
@@ -58,12 +65,13 @@
   "verified_on": {
     "date": "2026-08-01",
     "os": "全平台",
-    "note": "上游有多条长期 open 的同类 issue（#4297 47 条评论、#81847、#82994 等），说明它不是单一 bug 而是一类症状。这里给的是分型思路，不是保证一次修好。"
+    "note": "上游有多条长期 open 的同类 issue（#4297 47 条评论、#83083、#81847、#82994 等），说明它不是单一 bug 而是一类症状。这里给的是分型思路，不是保证一次修好。"
   },
   "sources": [
     "https://github.com/anthropics/claude-code/issues/4297",
     "https://github.com/anthropics/claude-code/issues/81847",
-    "https://github.com/anthropics/claude-code/issues/82994"
+    "https://github.com/anthropics/claude-code/issues/82994",
+    "https://github.com/anthropics/claude-code/issues/83083"
   ],
   "tags": [
     "网络",
@@ -73,8 +81,7 @@
   ],
   "aliases": [
     "claude-code#4297",
-    "claude-code#81847",
-    "claude-code#82994"
+    "claude-code#83083"
   ],
   "differential": [
     {

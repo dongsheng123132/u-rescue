@@ -90,6 +90,17 @@ const FEATURE_SHAPED = [
   /\b(expose|allow|provide|introduce|consider)\b.{0,30}\b(option|api|setting|flag|link)\b/i,
 ];
 
+/**
+ * 一律不收：这些确实是问题，但**用户在自己机器上做不了任何事**。
+ * 收进来只会让人工审核多读一遍然后删掉。
+ * 第一轮 9 条草稿人工审下来只留 2 条，漏进来的就是这几类。
+ */
+const NOT_ACTIONABLE = [
+  /\b(credit|credits|quota|usage limit|rate limit|billing|pricing|subscription|plan)\b.{0,40}\b(drain|burn|exhaust|fast|charge|cost)/i,
+  /额度|计费|扣费|套餐|用量/,
+  /\b(infinite loop|extension host|memory leak|stack overflow)\b/i, // 上游代码 bug，用户改不了
+];
+
 function hasToken() {
   if (process.env.GITHUB_TOKEN) return process.env.GITHUB_TOKEN;
   try { return execFileSync("gh", ["auth", "token"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); }
@@ -122,6 +133,7 @@ function looksLikeEnvFailure(issue) {
   const title = issue.title ?? "";
   const hay = `${title}\n${issue.body ?? ""}`;
   if (FEATURE_SHAPED.some((re) => re.test(title))) return false;
+  if (NOT_ACTIONABLE.some((re) => re.test(hay))) return false;
   if (STRONG.some((re) => re.test(hay))) return true;
   return WEAK.filter((re) => re.test(hay)).length >= 2;
 }
