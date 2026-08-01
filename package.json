@@ -11,10 +11,11 @@
     "doctor": "node bin/u-rescue.mjs doctor",
     "validate": "node scripts/validate.mjs",
     "harvest": "node scripts/harvest.mjs",
+    "build:index": "node scripts/build-index.mjs",
     "build:site": "node scripts/build-site.mjs",
     "build:skill": "node scripts/build-skill.mjs",
     "build:uking": "node scripts/build-uking-feed.mjs",
-    "build": "npm run validate && npm run build:site && npm run build:skill && npm run build:uking",
+    "build": "npm run validate && npm run build:index && npm run build:site && npm run build:skill && npm run build:uking",
     "test": "node scripts/validate.mjs && node scripts/smoke.mjs"
   },
   "keywords": ["codex", "claude-code", "troubleshooting", "诊断", "急救", "AI工具"],

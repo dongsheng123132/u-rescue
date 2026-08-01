@@ -12,6 +12,7 @@
 import { loadCases, searchCases, isStale } from "../lib/cases.mjs";
 import { runProbe, currentOs } from "../lib/probes.mjs";
 import { redact } from "../lib/redact.mjs";
+import { fetchRemote, cachedCases, cacheAgeDays, CACHE_TTL_DAYS, REMOTE_SOURCES } from "../lib/remote.mjs";
 
 const argv = process.argv.slice(2);
 const FLAGS = new Set(argv.filter((a) => a.startsWith("--")));
@@ -43,9 +44,16 @@ function usage() {
   npx u-rescue search "<报错原文或症状>"    按报错/症状找病例（把报错整段粘进来最准）
   npx u-rescue show <病例ID> [--json]      看某条病例的完整修复方案
   npx u-rescue list [--tool codex] [--json] 列出全部病例
+  npx u-rescue update [--json]             拉取最新病例库
+
+开关：
+  --fresh     本次先拉一遍最新病例再执行
+  --offline   本次完全不联网，只用本地的
+  --net       允许 doctor 做网络探测（默认不做）
 
 说明：
-  本工具只做诊断，不会替你执行修复命令 —— 修复步骤打印出来，你自己看懂了再敲。
+  只做诊断，不会替你执行修复命令 —— 步骤打印出来，你看懂了自己敲。
+  doctor 默认不联网：机器坏掉时网络本身可能就是病因，卡在那儿会把唯一能用的工具也毁掉。
   病例库：https://github.com/dongsheng123132/u-rescue
 `);
 }
@@ -85,6 +93,18 @@ function fmtCase(cse, { withFix = false } = {}) {
     if (cse.sources?.length) lines.push(dim(`  出处：${cse.sources.join("  ")}`));
   }
   return lines.join("\n");
+}
+
+/**
+ * doctor 不自动联网（网络可能就是病因），所以得**主动告诉用户他手上的库可能是旧的**。
+ * 不说的话，「没发现问题」会被读成「机器没事」，而真相可能只是这条病例还没同步下来。
+ */
+function staleLibHint() {
+  const age = cacheAgeDays();
+  if (age <= CACHE_TTL_DAYS) return "";
+  return dim(age === Infinity
+    ? "  提示：本机还没同步过病例库。跑 npx u-rescue update 拉一次最新的，可能就有你这条了。"
+    : `  提示：病例库是 ${Math.round(age)} 天前同步的，跑 npx u-rescue update 更新一下。`);
 }
 
 async function cmdDoctor(cases) {
@@ -154,6 +174,7 @@ async function cmdDoctor(cases) {
   if (!results.length) {
     out(green("✓ 能自动查的这些项目里，没发现问题。"));
     out(coverageLine);
+    out(staleLibHint());
     out(dim(`  还是坏的？把报错整段粘进来搜：npx u-rescue search "报错原文"`));
     return 0;
   }
@@ -180,6 +201,7 @@ async function cmdDoctor(cases) {
     out("");
   }
   out(coverageLine);
+  out(staleLibHint());
   out(dim("  修不好？把病例 ID 发给我们，或用 https://u-king.org 的图形界面一键修。"));
   return 1;
 }
@@ -254,17 +276,78 @@ function cmdList(cases) {
   return 0;
 }
 
+async function cmdUpdate() {
+  log(dim("拉取最新病例库…"));
+  const r = await fetchRemote({ onLog: (m) => log(dim(`  ${m}`)) });
+
+  if (!r.ok) {
+    if (JSON_OUT) { out(JSON.stringify({ ok: false, tried: r.tried, fallback: "内置病例库" }, null, 2)); return 1; }
+    out(yellow("没能更新，继续用内置的病例库（功能不受影响）。"));
+    r.tried.forEach((t) => out(dim(`  ${t}`)));
+    return 1;
+  }
+
+  const before = loadCases().length;
+  const bundledIds = new Set(loadCases().map((c) => c.id));
+  const fresh = r.entry.payload.cases.filter((c) => !bundledIds.has(c.id));
+
+  if (JSON_OUT) {
+    out(JSON.stringify({ ok: true, source: r.source, count: r.count, bundled: before, new_ids: fresh.map((c) => c.id) }, null, 2));
+    return 0;
+  }
+  out(green(`✓ 已更新到 ${r.count} 条病例`));
+  out(dim(`  来源：${r.source}`));
+  if (fresh.length) {
+    out(dim(`  比内置版新增 ${fresh.length} 条：`));
+    fresh.slice(0, 10).forEach((c) => out(`    ${c.id}  ${c.title}`));
+    if (fresh.length > 10) out(dim(`    …还有 ${fresh.length - 10} 条`));
+  } else {
+    out(dim("  内置版已经是最新的。"));
+  }
+  return 0;
+}
+
+/**
+ * 决定这次用哪份病例：远端缓存还是内置。
+ *
+ * 取舍写在这里，别改坏：
+ *  - doctor **永远不自动联网**。那是「机器已经坏了」的场景，网络本身可能就是病因。
+ *  - search 在缓存过期时会自动拉一次（带 4 秒硬超时），拉不到就静静用内置的。
+ *  - --offline 一律不联网；--fresh 一律先拉。
+ */
+async function resolveCases(cmd) {
+  const bundled = loadCases();
+  if (FLAGS.has("--offline")) return { cases: bundled, from: "内置" };
+
+  if (FLAGS.has("--fresh")) {
+    const r = await fetchRemote({ onLog: (m) => log(dim(`  ${m}`)) });
+    if (!r.ok) log(dim("  拉取失败，用内置病例库继续。"));
+  } else if (cmd === "search" && cacheAgeDays() > CACHE_TTL_DAYS) {
+    // 「必要时自动获取」就是这一条：只在真的旧了、且当前命令用得上时才去拉。
+    log(dim("本地病例库有点旧，顺手更新一下（最多等 4 秒）…"));
+    await fetchRemote({ onLog: () => {} });
+  }
+
+  const remote = cachedCases();
+  if (!remote) return { cases: bundled, from: "内置" };
+  // 远端病例数不少于内置才采用，防止拿到一份被截断的旧索引把库缩水。
+  if (remote.cases.length < bundled.length) return { cases: bundled, from: "内置（远端比本地还少，已忽略）" };
+  return { cases: remote.cases, from: `远端 ${remote.meta.updated ?? ""}（${new Date(remote.meta.fetched_at).toLocaleDateString("zh-CN")} 拉取）` };
+}
+
 async function main() {
   const cmd = ARGS[0];
   if (!cmd || FLAGS.has("--help") || FLAGS.has("-h")) { usage(); return 0; }
+  if (cmd === "update") return await cmdUpdate();
 
-  let cases;
+  let cases, from;
   try {
-    cases = loadCases();
+    ({ cases, from } = await resolveCases(cmd));
   } catch (err) {
     log(red(`病例库加载失败：${err.message}`));
     return 2;
   }
+  if (!JSON_OUT && from !== "内置") log(dim(`病例库来源：${from}`));
 
   switch (cmd) {
     case "doctor": return await cmdDoctor(cases);

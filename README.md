@@ -23,11 +23,26 @@ npx u-rescue search "self-signed certificate detected"
 # 看某条病例的完整修复方案
 npx u-rescue show codex.proxy.localhost-elevated-sandbox
 
+# 拉最新病例库（病例天天在补，装到的是快照）
+npx u-rescue update
+
 # 给脚本/AI 调用
 npx u-rescue doctor --json
 ```
 
 需要 Node 18+。**这个工具只诊断，不替你执行修复** —— 步骤打印出来，你看懂了自己敲。
+
+### 关于自动更新
+
+病例库会持续补充，所以 `search` 在本地库超过 7 天没同步时会顺手拉一次（**硬超时 4 秒**，
+拉不到就静静用内置的，绝不阻断）。`--fresh` 强制先拉，`--offline` 完全不联网。
+
+**`doctor` 永远不自动联网。** 那正是「机器已经坏了」的场景 —— 网络本身可能就是病因，
+卡在那儿会把唯一还能用的工具也毁掉。所以它改成主动提示你库有多旧。
+
+拉回来的数据会**重新过一遍探针白名单和 `SAFE_BINS`**，任何一条不合规就**整包拒绝**、
+继续用内置的。远端被投毒或被运营商劫持，最坏结果仍然只是「给出一条错误建议」。
+冒烟测试里有三条专门守着这个。
 
 网页版（不用命令行）：<https://u-claw.org.cn/rescue/>
 

@@ -5,9 +5,11 @@
  */
 
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, loadCases } from "../lib/cases.mjs";
 import { redact } from "../lib/redact.mjs";
+import { verifyPayload } from "../lib/remote.mjs";
 
 const CLI = join(ROOT, "bin", "u-rescue.mjs");
 let failed = 0;
@@ -113,6 +115,56 @@ check("每条病例都能被自己的报错原文搜到", () => {
     if (!j.results.some((x) => x.id === c.id)) bad.push(c.id);
   }
   if (bad.length) throw new Error(`这些病例搜自己的报错都搜不到：${bad.join(", ")}`);
+});
+
+check("--offline 不联网也能正常工作", () => {
+  const r = run(["list", "--offline", "--json"]);
+  const j = JSON.parse(r.out);
+  if (j.count !== loadCases().length) throw new Error("offline 模式下病例数不对");
+});
+
+check("远端数据校验：混进白名单外的可执行文件必须整包拒绝", () => {
+  const bad = {
+    cases: [{
+      id: "evil.test.case", cause: "x", fix: { steps: [{ desc: "x" }], verify: "x" },
+      diagnose: [{ id: "p", role: "evidence", kind: "cmd_ok", cmd: "curl-evil", args: [], expect: "pass" }],
+    }],
+  };
+  const v = verifyPayload(bad);
+  if (v.ok) throw new Error("白名单外的 cmd 竟然通过了校验 —— 这是远程投毒的入口");
+});
+
+check("远端数据校验：探针参数带 shell 注入必须整包拒绝", () => {
+  const bad = {
+    cases: [{
+      id: "evil.test.inject", cause: "x", fix: { steps: [{ desc: "x" }], verify: "x" },
+      diagnose: [{ id: "p", role: "evidence", kind: "cmd_ok", cmd: "node", args: ["-e", "require('fs')"], expect: "pass" }],
+    }],
+  };
+  if (verifyPayload(bad).ok) throw new Error("带空格/括号的参数通过了校验");
+});
+
+check("远端数据校验：未知探针类型必须整包拒绝", () => {
+  const bad = {
+    cases: [{
+      id: "evil.test.kind", cause: "x", fix: { steps: [{ desc: "x" }], verify: "x" },
+      diagnose: [{ id: "p", role: "evidence", kind: "run_shell", expect: "pass" }],
+    }],
+  };
+  if (verifyPayload(bad).ok) throw new Error("未知探针类型通过了校验");
+});
+
+check("远端数据校验：合法数据要能通过", () => {
+  const good = { cases: loadCases().map(({ _file, ...c }) => c) };
+  const v = verifyPayload(good);
+  if (!v.ok) throw new Error(`自己的病例库没通过自己的远端校验：${v.reason}`);
+});
+
+check("cases.json 索引和病例库一致", () => {
+  const idx = JSON.parse(readFileSync(join(ROOT, "cases.json"), "utf8"));
+  if (idx.count !== loadCases().length) {
+    throw new Error(`cases.json 说 ${idx.count} 条，实际 ${loadCases().length} 条 —— 跑 npm run build:index`);
+  }
 });
 
 console.log(failed ? `\n✗ ${failed} 项失败` : "\n✓ 全部通过");

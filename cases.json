@@ -1,0 +1,1687 @@
+{
+  "schema": "u-rescue/case@1",
+  "version": 1,
+  "updated": "2026-08-01",
+  "count": 19,
+  "site": "https://u-claw.org.cn/rescue",
+  "repo": "https://github.com/dongsheng123132/u-rescue",
+  "stale_after_days": 180,
+  "cases": [
+    {
+      "id": "claude-code.auth.401-invalid-credentials",
+      "tool": "claude-code",
+      "title": "报 401 认证失败，可 key 我明明是复制粘贴的",
+      "symptoms": [
+        "提示 Invalid authentication credentials",
+        "key 在别的软件里能用，Claude Code 里就 401",
+        "刚配好能用，过一会儿又变 401",
+        "登录过官方账号，后来换成第三方 key 就一直 401"
+      ],
+      "errors": [
+        "401",
+        "Invalid authentication credentials",
+        "authentication_error",
+        "invalid x-api-key"
+      ],
+      "platforms": [
+        "windows",
+        "macos",
+        "linux"
+      ],
+      "severity": "blocker",
+      "diagnose": [
+        {
+          "id": "key1",
+          "role": "evidence",
+          "kind": "env_present",
+          "name": "ANTHROPIC_API_KEY",
+          "expect": "pass",
+          "label": "环境变量里设了 ANTHROPIC_API_KEY"
+        },
+        {
+          "id": "key2",
+          "role": "evidence",
+          "kind": "env_present",
+          "name": "ANTHROPIC_AUTH_TOKEN",
+          "expect": "pass",
+          "label": "同时又设了 ANTHROPIC_AUTH_TOKEN（两处打架）"
+        }
+      ],
+      "cause": "401 在 Claude Code 上有四个常见来源，且它们会互相掩盖：① **key 放错了字段**——用第三方中转要填 ANTHROPIC_AUTH_TOKEN，很多人填成 ANTHROPIC_API_KEY，或反过来；② **多处配置打架**——环境变量、~/.claude/settings.json、项目级配置同时存在，实际生效的不是你改的那份；③ **登录态残留**——之前登过官方账号，凭据缓存还在，和新填的 key 冲突；④ 复制时带了不可见字符（从网页复制常见尾随空格/换行）。第 ② 条是最坑的：你改了一个地方看不到效果，于是反复改，把四个地方都改乱了。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先搞清楚现在到底有几处在设 key。逐个看，别跳过：",
+            "cmd": "echo $env:ANTHROPIC_API_KEY; echo $env:ANTHROPIC_AUTH_TOKEN; echo $env:ANTHROPIC_BASE_URL; type $env:USERPROFILE\\.claude\\settings.json",
+            "shell": "powershell",
+            "risk": "read-only"
+          },
+          {
+            "desc": "用第三方中转时，正确的组合是 base URL + AUTH_TOKEN。在 ~/.claude/settings.json 的 env 块里写清楚，然后把重复的环境变量删掉，只留一处。",
+            "cmd": "{\n  \"env\": {\n    \"ANTHROPIC_BASE_URL\": \"https://你的中转地址\",\n    \"ANTHROPIC_AUTH_TOKEN\": \"你的key\"\n  }\n}",
+            "shell": "any",
+            "risk": "low",
+            "rollback": "改前先复制一份 settings.json；恢复就是拷回来。"
+          },
+          {
+            "desc": "直接拿 curl 验一下这个 key 到底行不行——这一步能一刀切开「key 的问题」和「配置的问题」。",
+            "cmd": "curl -sS -o /dev/null -w \"%{http_code}\\n\" -X POST \"$BASE/v1/messages\" -H \"x-api-key: $KEY\" -H \"anthropic-version: 2023-06-01\" -H \"content-type: application/json\" -d '{\"model\":\"claude-sonnet-4-5\",\"max_tokens\":8,\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}'",
+            "shell": "bash",
+            "risk": "read-only"
+          },
+          {
+            "desc": "curl 返回 200 但 Claude Code 仍 401 → 确定是配置打架，把环境变量全清掉，只留 settings.json 一处，重开终端。",
+            "risk": "low",
+            "rollback": "重新设回原来的环境变量。"
+          },
+          {
+            "desc": "curl 也 401 → 是 key 或余额的问题，找发 key 的人核对，别再改本地配置。",
+            "risk": "read-only"
+          }
+        ],
+        "verify": "重开终端后发一句话能收到回复；并且 echo 出来的环境变量只有你想留的那一处。",
+        "auto": true,
+        "uking_action": "runtime.driver.inspect"
+      },
+      "evidence": "field",
+      "verified_on": {
+        "date": "2026-08-01",
+        "os": "Windows 11 / macOS",
+        "note": "客户机高频问题。配置打架那一条我们见得最多——用户改了环境变量但 settings.json 里还有旧值。"
+      },
+      "sources": [
+        "https://github.com/anthropics/claude-code/issues/69706"
+      ],
+      "uking": "U-King 的「AI 设置」页会直接显示每个工具当前真正生效的驱动和端点，配置打架时一眼就能看出来是哪一处在起作用。",
+      "tags": [
+        "401",
+        "认证",
+        "第三方中转",
+        "配置冲突"
+      ],
+      "aliases": [
+        "claude-code#69706"
+      ],
+      "falsepositives": [
+        "有人故意同时设两个变量给不同工具用，自己清楚在做什么。两个都设了不等于一定出问题"
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/claude-code.auth.401-invalid-credentials.html"
+    },
+    {
+      "id": "claude-code.install.npmrc-bad-prefix",
+      "tool": "claude-code",
+      "title": "npm 说装成功了，但 claude 命令就是找不到",
+      "symptoms": [
+        "npm install -g 显示成功，敲 claude 却说找不到命令",
+        "重装很多次都一样",
+        "以前跟着某篇教程改过 npm 配置",
+        "换个终端也一样找不到"
+      ],
+      "errors": [
+        "command not found: claude",
+        "'claude' 不是内部或外部命令",
+        "npm ERR! code ENOENT"
+      ],
+      "platforms": [
+        "macos",
+        "linux",
+        "windows"
+      ],
+      "severity": "blocker",
+      "diagnose": [
+        {
+          "id": "npm",
+          "role": "precondition",
+          "kind": "path_has",
+          "name": "npm",
+          "expect": "pass",
+          "label": "装了 npm"
+        },
+        {
+          "id": "prefix",
+          "role": "evidence",
+          "kind": "npm_prefix_on_path",
+          "expect": "pass",
+          "label": "npm 全局目录不在 PATH 上"
+        }
+      ],
+      "cause": "npm 有个 prefix 配置决定全局包装到哪儿。如果 ~/.npmrc 里的 prefix 指向了一个不存在、没权限、或者不在 PATH 上的目录（常见于跟着网上教程改过 prefix、或从旧机器迁移过 .npmrc），npm 会老老实实把包装进那个目录并报告成功——但那个目录不在 PATH 上，所以命令永远找不到。**「装成功了但命令不存在」这个组合，基本可以直接锁定 prefix 问题**，不用再怀疑网络或权限。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "看 npm 现在把全局包往哪儿装：",
+            "cmd": "npm config get prefix && npm root -g",
+            "shell": "any",
+            "risk": "read-only"
+          },
+          {
+            "desc": "再看 PATH 里有没有这个目录的 bin。两者对不上就是确诊。",
+            "cmd": "echo $PATH",
+            "shell": "bash",
+            "risk": "read-only"
+          },
+          {
+            "desc": "看一眼 .npmrc 里到底写了什么（问题多半就在这个文件里）：",
+            "cmd": "cat ~/.npmrc",
+            "shell": "bash",
+            "risk": "read-only"
+          },
+          {
+            "desc": "方案 A（推荐）：删掉自定义 prefix，让 npm 回到默认位置。",
+            "cmd": "npm config delete prefix",
+            "shell": "any",
+            "risk": "low",
+            "rollback": "npm config set prefix \"原来的值\"（执行前先记下上一步查到的值）。"
+          },
+          {
+            "desc": "方案 B：保留 prefix，把它的 bin 目录加进 PATH。适合你确实需要装到自定义位置的情况。",
+            "cmd": "echo 'export PATH=\"$(npm config get prefix)/bin:$PATH\"' >> ~/.zshrc",
+            "shell": "zsh",
+            "risk": "low",
+            "rollback": "编辑 ~/.zshrc 删掉这一行；改前先 cp ~/.zshrc ~/.zshrc.bak。"
+          },
+          {
+            "desc": "改完重装一次，并**新开一个终端**再验证。",
+            "cmd": "npm install -g @anthropic-ai/claude-code",
+            "shell": "any",
+            "risk": "low",
+            "rollback": "npm uninstall -g @anthropic-ai/claude-code"
+          }
+        ],
+        "verify": "新开终端敲 claude --version 能打印版本号；where/which claude 指向的路径在 PATH 里。",
+        "auto": true,
+        "uking_action": "runtime.stack.inspect"
+      },
+      "evidence": "field",
+      "verified_on": {
+        "date": "2026-08-01",
+        "os": "macOS / Windows",
+        "note": "客户机实证：Mac 上 claude 装不上，根因是 .npmrc 里残留了一个坏的 prefix。"
+      },
+      "sources": [
+        "https://github.com/anthropics/claude-code/issues/79031"
+      ],
+      "uking": "U-King 装机会自己检测并绕开坏 prefix，装完还会验证命令真的能跑起来，不只看 npm 的退出码。",
+      "tags": [
+        "安装",
+        "npm",
+        "prefix",
+        "命令找不到"
+      ],
+      "aliases": [
+        "claude-code#79031"
+      ],
+      "falsepositives": [
+        "刚改完 PATH 但没重开终端，当前进程读到的还是旧 PATH",
+        "用 nvm / fnm 管理 Node 时 prefix 是随版本动态变的，可能被判成不在 PATH 上"
+      ],
+      "differential": [
+        {
+          "case": "shared.pm.command-hijacked",
+          "distinguish": "prefix 问题是命令**根本找不到**；撞名是命令**找得到但不是你要的那个**。",
+          "decisive_test": "where/which 有没有输出。完全没有 = prefix；有多行 = 撞名。"
+        },
+        {
+          "case": "shared.win.path-broken-system32",
+          "distinguish": "prefix 只影响 npm 装的命令；PATH 坏了连系统自带命令都没。",
+          "decisive_test": "敲 where（Windows）本身在不在。它都没了就先修 PATH。"
+        }
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/claude-code.install.npmrc-bad-prefix.html"
+    },
+    {
+      "id": "claude-code.net.connection-error",
+      "tool": "claude-code",
+      "title": "反复报 API Error (Connection error.) / 回答说到一半断掉",
+      "symptoms": [
+        "一发消息就报 Connection error",
+        "回答写到一半突然断了，提示连接中途关闭",
+        "时好时坏，重试几次能成一次",
+        "网页版能用，命令行版不行",
+        "越用到后面越频繁，一开始好好的",
+        "断了之后卡很久（好几分钟）才自己恢复"
+      ],
+      "errors": [
+        "API Error (Connection error.)",
+        "Connection closed mid-response",
+        "ECONNRESET",
+        "fetch failed",
+        "terminated",
+        "Unable to connect to API (ECONNRESET)"
+      ],
+      "platforms": [
+        "windows",
+        "macos",
+        "linux"
+      ],
+      "severity": "blocker",
+      "cause": "这是最高频也最容易误判的一类，因为「连接错误」四个字盖住了至少四种完全不同的病因：① 代理只代理了 HTTP 请求，没代理长连接/流式响应，于是握手成功、流到一半被掐；② 梯子节点不稳或有连接数限制，长请求被中途回收；③ 本地网络设备（部分家用路由、企业防火墙）对长时间空闲的 TLS 连接做超时回收；④ 真的是服务端抖动。关键的区分方法是**看它是「一发就断」还是「写到一半断」**：一发就断偏向代理/DNS/证书，写到一半断偏向长连接被中途掐——这两个方向的修法完全不同，不先分清就会瞎试。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "第一步先分型：是「发出去就报错」还是「回答到一半断」？记下来，后面按这个走。",
+            "risk": "read-only"
+          },
+          {
+            "desc": "一发就断 → 先验基础连通性。Windows 用系统自带 curl：",
+            "cmd": "curl -sS -o NUL -w \"%{http_code} %{time_total}s\\n\" https://api.anthropic.com/",
+            "shell": "cmd",
+            "risk": "read-only"
+          },
+          {
+            "desc": "注意一个容易走弯路的点：curl 能秒通**不代表**没问题。curl 是一次短请求，而出问题的是长时间的流式连接。上游报告者用 curl 验通了仍然照断，所以别拿 curl 通过就排除网络。",
+            "risk": "read-only"
+          },
+          {
+            "desc": "写到一半断 → 关掉梯子的「TUN / 全局模式」，改成规则模式或直接把 API 域名加白；或者换一个更稳的节点再试。国内跨境长连接对节点质量非常敏感。",
+            "risk": "low",
+            "rollback": "在梯子软件里改回原来的模式。"
+          },
+          {
+            "desc": "确认代理环境变量没有把回环地址也代理掉（否则本地服务互调也被绕出去）。",
+            "cmd": "$env:NO_PROXY=\"localhost,127.0.0.1,::1\"",
+            "shell": "powershell",
+            "risk": "low",
+            "rollback": "删掉该变量。"
+          },
+          {
+            "desc": "如果全程没挂代理且 curl 也连不上，那基本是网络本身到不了，换网络（手机热点）验证一次就能定性——别在这一步继续调配置。",
+            "risk": "read-only"
+          }
+        ],
+        "verify": "连续发三次较长的请求都能完整收到回复，不是「重试一次碰巧成了」。",
+        "auto": false
+      },
+      "evidence": "upstream-issue",
+      "verified_on": {
+        "date": "2026-08-01",
+        "os": "全平台",
+        "note": "上游有多条长期 open 的同类 issue（#4297 47 条评论、#83083、#81847、#82994 等），说明它不是单一 bug 而是一类症状。这里给的是分型思路，不是保证一次修好。"
+      },
+      "sources": [
+        "https://github.com/anthropics/claude-code/issues/4297",
+        "https://github.com/anthropics/claude-code/issues/81847",
+        "https://github.com/anthropics/claude-code/issues/82994",
+        "https://github.com/anthropics/claude-code/issues/83083"
+      ],
+      "tags": [
+        "网络",
+        "代理",
+        "流式",
+        "掉线"
+      ],
+      "aliases": [
+        "claude-code#4297",
+        "claude-code#83083"
+      ],
+      "differential": [
+        {
+          "case": "claude-code.net.self-signed-certificate",
+          "distinguish": "证书那条会明说 self-signed / certificate；这条只说 connection error，不提证书。",
+          "decisive_test": "看报错原文里有没有 certificate 字样。有就走证书那条，别在这里瞎调代理。"
+        },
+        {
+          "case": "codex.api.responses-only-thirdparty",
+          "distinguish": "端点不兼容是稳定的 404/400，每次都一样；网络问题是时好时坏。",
+          "decisive_test": "连发五次。次次同样报错 = 端点问题；有成有败 = 网络问题。"
+        }
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/claude-code.net.connection-error.html"
+    },
+    {
+      "id": "claude-code.net.self-signed-certificate",
+      "tool": "claude-code",
+      "title": "报「Self-signed certificate detected」，可是我根本没用代理",
+      "symptoms": [
+        "突然连不上，提示检测到自签名证书",
+        "家里普通宽带，没挂代理也报",
+        "昨天还好好的，什么都没改就坏了"
+      ],
+      "errors": [
+        "Unable to connect to API: Self-signed certificate detected",
+        "Check your proxy or corporate SSL certificates",
+        "SELF_SIGNED_CERT_IN_CHAIN",
+        "unable to get local issuer certificate"
+      ],
+      "platforms": [
+        "windows",
+        "macos",
+        "linux"
+      ],
+      "severity": "blocker",
+      "diagnose": [
+        {
+          "id": "reach",
+          "role": "evidence",
+          "kind": "http_reach",
+          "url": "https://api.anthropic.com",
+          "expect": "fail",
+          "label": "到 API 的 TLS 连接建不起来（需 --net）"
+        }
+      ],
+      "cause": "这条报错的字面意思是「TLS 链上出现了不受信任的证书」，但**说自己没用代理的人，机器上通常有个他不知道的中间人**。国内最常见的三个来源：① 杀毒软件/安全卫士开了 HTTPS 扫描（360、火绒、卡巴斯基都有这功能），它会用自签根证书重签所有 HTTPS 流量；② 梯子软件开了 TUN/系统代理模式，全局接管流量；③ 公司/学校网络的透明代理。第四种是真的没有中间人——系统根证书库过期或损坏，常见于长期没更新的 Windows 和被精简过的系统镜像。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先定位是谁在做中间人。拿 curl 看一眼证书是谁签的（Windows 用系统自带的 curl.exe）：",
+            "cmd": "curl -v https://api.anthropic.com/ 2>&1 | findstr /i \"issuer subject\"",
+            "shell": "cmd",
+            "risk": "read-only"
+          },
+          {
+            "desc": "如果 issuer 里出现杀软/梯子的名字（如 360、Huorong、Kaspersky、Clash、Surge），就是它。到对应软件里关掉「HTTPS 扫描 / SSL 检测 / TUN 模式」，然后重开 Claude。",
+            "risk": "low",
+            "rollback": "在同一个软件里把该开关重新打开。"
+          },
+          {
+            "desc": "必须保留中间人（公司环境）时，把它的根证书导出成 .pem，让 Node 信任它。这是正规做法。",
+            "cmd": "[Environment]::SetEnvironmentVariable(\"NODE_EXTRA_CA_CERTS\", \"C:\\certs\\corp-root.pem\", \"User\")",
+            "shell": "powershell",
+            "risk": "low",
+            "rollback": "把该环境变量删掉即可。"
+          },
+          {
+            "desc": "如果 issuer 看着正常（是 Let's Encrypt / DigiCert 这类），那是本机根证书库的问题——Windows 跑一次系统更新，macOS/Linux 更新 ca-certificates 包。",
+            "risk": "low",
+            "rollback": "无需回滚。"
+          },
+          {
+            "desc": "⚠️ 网上到处流传的 NODE_TLS_REJECT_UNAUTHORIZED=0 **不要用**。它是把全局 TLS 校验关掉，等于让任何人都能中间人你的 API key。宁可连不上，也别开这个。",
+            "risk": "read-only"
+          }
+        ],
+        "verify": "重开 Claude Code 发一句话能正常收到回复；且上面那条 curl 命令看到的 issuer 是正常的公共 CA。",
+        "auto": false
+      },
+      "evidence": "upstream-issue",
+      "verified_on": {
+        "date": "2026-08-01",
+        "tool_version": "Claude Code v2.1.201",
+        "os": "Windows / macOS / Ubuntu",
+        "note": "上游 issue 已关闭；「没用代理也报」的场景我们在客户机上见过多次，根因基本都是杀软 HTTPS 扫描或梯子 TUN 模式。"
+      },
+      "sources": [
+        "https://github.com/anthropics/claude-code/issues/74369",
+        "https://github.com/anthropics/claude-code/issues/24470"
+      ],
+      "tags": [
+        "证书",
+        "杀毒软件",
+        "梯子",
+        "TLS"
+      ],
+      "aliases": [
+        "claude-code#74369",
+        "claude-code#24470"
+      ],
+      "falsepositives": [
+        "单纯断网、被墙、DNS 挂了也会让这个探针失败，不一定是证书问题。要看到证书相关的报错才算数"
+      ],
+      "differential": [
+        {
+          "case": "claude-code.net.connection-error",
+          "distinguish": "这条一定会提到证书；那条不提。",
+          "decisive_test": "curl 看 issuer 是谁签的。出现杀软/梯子的名字就是这条。"
+        }
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/claude-code.net.self-signed-certificate.html"
+    },
+    {
+      "id": "claude-code.shell.no-suitable-shell",
+      "tool": "claude-code",
+      "title": "Windows 上 Claude Code 报「No suitable shell found」，装了 Git Bash 也没用",
+      "symptoms": [
+        "一让它执行命令就报找不到合适的 shell",
+        "明明装了 Git Bash，路径也对，还是报",
+        "装了 WSL 也没用，重启也没用"
+      ],
+      "errors": [
+        "No suitable shell found",
+        "Claude CLI requires a Posix shell environment",
+        "Please ensure you have a valid shell installed and the SHELL environment variable set"
+      ],
+      "platforms": [
+        "windows"
+      ],
+      "severity": "blocker",
+      "diagnose": [
+        {
+          "id": "os",
+          "role": "precondition",
+          "kind": "os_is",
+          "name": "windows",
+          "expect": "pass",
+          "label": "当前是 Windows"
+        },
+        {
+          "id": "bash.gone",
+          "role": "evidence",
+          "kind": "path_has",
+          "name": "bash",
+          "expect": "fail",
+          "label": "PATH 上没有任何 bash"
+        }
+      ],
+      "cause": "Claude Code 在 Windows 上需要一个 POSIX shell 来跑 Bash 工具，它按顺序找 Git Bash、WSL，再看 SHELL 环境变量。三个常见失败点：① Git Bash 装在非默认路径（比如装到 D 盘或用了 scoop/winget 的路径）；② SHELL 设了但只在用户级设、当前进程是从更早启动的父进程继承的旧环境；③ 用的是 ARM64 版 Windows，装的 Git 是 ARM 构建，检测逻辑对不上。注意：设完环境变量必须**完全退出应用再重开**，改环境变量不会影响已经在跑的进程——这一条让很多人误以为「设了没用」。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先确认 Git Bash 到底在哪。在 PowerShell 里跑：",
+            "cmd": "where.exe bash; Get-Command bash -ErrorAction SilentlyContinue",
+            "shell": "powershell",
+            "risk": "read-only"
+          },
+          {
+            "desc": "没装就先装 Git for Windows（默认路径别改），装的时候勾上把 Git 加入 PATH。",
+            "risk": "low",
+            "rollback": "从控制面板卸载 Git for Windows。"
+          },
+          {
+            "desc": "把 SHELL 指到真实的 bash.exe（路径换成上一步查到的）。",
+            "cmd": "[Environment]::SetEnvironmentVariable(\"SHELL\", \"C:\\Program Files\\Git\\bin\\bash.exe\", \"User\")",
+            "shell": "powershell",
+            "risk": "low",
+            "rollback": "[Environment]::SetEnvironmentVariable(\"SHELL\", $null, \"User\")"
+          },
+          {
+            "desc": "如果是 Claude Code CLI，也可以用它自己的专用变量指定，比设 SHELL 更精确。",
+            "cmd": "[Environment]::SetEnvironmentVariable(\"CLAUDE_CODE_GIT_BASH_PATH\", \"C:\\Program Files\\Git\\bin\\bash.exe\", \"User\")",
+            "shell": "powershell",
+            "risk": "low",
+            "rollback": "把该变量设为 $null 删除。"
+          },
+          {
+            "desc": "**完全退出** Claude（含托盘图标 / 后台进程），再重新打开。只关窗口不算。",
+            "risk": "read-only"
+          }
+        ],
+        "verify": "让 Claude 执行一条最简单的命令（比如 echo hi），能看到正常输出而不是报 shell 错误。",
+        "auto": false
+      },
+      "evidence": "upstream-issue",
+      "verified_on": {
+        "date": "2026-08-01",
+        "tool_version": "Claude Cowork Desktop 2.1.217 / 2.1.218",
+        "os": "Windows 11",
+        "note": "上游 issue 仍 open；报告者在远程控制场景下即使设对了 SHELL 仍复现，说明还有第二个根因未解。"
+      },
+      "sources": [
+        "https://github.com/anthropics/claude-code/issues/80810",
+        "https://github.com/anthropics/claude-code/issues/73461"
+      ],
+      "tags": [
+        "shell",
+        "Git Bash",
+        "Windows",
+        "环境变量"
+      ],
+      "aliases": [
+        "claude-code#80810",
+        "claude-code#73461"
+      ],
+      "falsepositives": [
+        "靠 WSL 提供 shell 的机器，Windows 侧 PATH 上确实没有 bash，但 Claude 走 WSL 完全正常"
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/claude-code.shell.no-suitable-shell.html"
+    },
+    {
+      "id": "claude-code.ssh.no-keys-offered",
+      "tool": "claude-code",
+      "title": "连远程服务器报「All configured authentication methods failed」，密钥换了几遍都不行",
+      "symptoms": [
+        "填了私钥路径还是连不上远程服务器",
+        "同一个密钥用普通 SSH 客户端连是好的",
+        "换了密钥格式、重新生成、去掉密码短语，全都没用",
+        "改成用 IP 或用 SSH 配置里的别名，结果一样"
+      ],
+      "errors": [
+        "All configured authentication methods failed",
+        "Received disconnect from",
+        "[preauth]"
+      ],
+      "platforms": [
+        "windows",
+        "macos",
+        "linux"
+      ],
+      "severity": "major",
+      "cause": "「认证方式全部失败」这句话有两种完全不同的含义，而它们的修法相反：① 客户端**提交了**密钥，服务器拒绝了（密钥不对、没授权、权限不对）；② 客户端**一个密钥都没提交**（根本没读到你的密钥文件）。绝大多数人默认是第一种，于是花几个小时反复换密钥——但如果是第二种，换一百个密钥都没用，因为它们压根没被送出去。区分两者只需要看服务器端的 sshd 日志：只要客户端提交过任何密钥（哪怕是错的），sshd 一定会记一行 `Failed publickey`；**如果日志里从头到尾没有这一行，就是第二种**，问题在客户端读不到密钥，不在你的密钥本身。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "第一刀：拿标准 SSH 客户端用**同一个密钥、同一个路径**连一次。这一步能立刻分开「你的密钥有问题」和「这个工具的 SSH 有问题」。",
+            "cmd": "ssh -v -i \"你的私钥完整路径\" 用户名@服务器地址",
+            "shell": "any",
+            "risk": "read-only"
+          },
+          {
+            "desc": "标准 ssh 能连上 → 你的密钥、权限、服务器授权全都没问题，是这个工具的 SSH 客户端没读到密钥。别再动你的密钥了。",
+            "risk": "read-only"
+          },
+          {
+            "desc": "标准 ssh 也连不上 → 看 -v 输出里 \"Offering public key\" 那几行。完全没有就是本地读不到密钥（路径错/权限错）；有但被拒就是服务器端没授权。",
+            "risk": "read-only"
+          },
+          {
+            "desc": "能登服务器的话，看 sshd 日志确认客户端到底提交没提交密钥。有 Failed publickey = 提交了；一行都没有 = 一个都没提交。",
+            "cmd": "sudo journalctl -u sshd -n 50",
+            "shell": "bash",
+            "risk": "read-only"
+          },
+          {
+            "desc": "绕开办法：把密钥加进 ssh-agent，让工具通过 agent 拿密钥，而不是自己读文件。这条对「客户端读不到密钥文件」类问题通常直接有效。",
+            "cmd": "ssh-add \"你的私钥完整路径\"",
+            "shell": "any",
+            "risk": "low",
+            "rollback": "ssh-add -d \"你的私钥完整路径\" 把它从 agent 里移除。"
+          },
+          {
+            "desc": "Windows 上还要注意：私钥路径带空格或中文时，一些客户端会读不到。把密钥放到纯英文短路径（如 C:\\ssh\\id_ed25519）再试一次。",
+            "risk": "low",
+            "rollback": "把密钥文件挪回原位置即可（拷贝，不要剪切）。"
+          }
+        ],
+        "verify": "在工具里成功连上远程服务器；或者退一步，服务器 sshd 日志里出现了 Accepted publickey。",
+        "auto": false
+      },
+      "differential": [
+        {
+          "case": "claude-code.auth.401-invalid-credentials",
+          "distinguish": "这条是连远程服务器（SSH）失败；401 那条是调模型 API 失败。两者都叫「认证失败」，但完全不相干。",
+          "decisive_test": "看是连服务器时报的，还是发消息时报的。"
+        }
+      ],
+      "evidence": "upstream-issue",
+      "verified_on": {
+        "date": "2026-08-01",
+        "tool_version": "Claude Desktop Code tab",
+        "os": "Windows",
+        "note": "⚠️ 上游 issue 仍 open，**官方还没有修复**。这条给的不是修好它的办法，而是①帮你确认问题不在你的密钥上（省下反复换密钥的时间）②给出 ssh-agent 这条绕行路。我们没有复现过。"
+      },
+      "aliases": [
+        "claude-code#83017"
+      ],
+      "sources": [
+        "https://github.com/anthropics/claude-code/issues/83017"
+      ],
+      "tags": [
+        "SSH",
+        "认证失败",
+        "远程",
+        "密钥"
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/claude-code.ssh.no-keys-offered.html"
+    },
+    {
+      "id": "codex.api.responses-only-thirdparty",
+      "tool": "codex",
+      "title": "换成第三方中转/国产模型后，Codex 一发消息就报错",
+      "symptoms": [
+        "配了别家的 API 地址，Codex 连不上或一发消息就 404/400",
+        "同一个 key 和地址在别的工具（Claude Code、Cherry Studio）里是好的",
+        "升级 Codex 之后原本能用的第三方端点突然不能用了"
+      ],
+      "errors": [
+        "404 Not Found",
+        "400 Bad Request",
+        "/v1/responses",
+        "unsupported endpoint"
+      ],
+      "platforms": [
+        "windows",
+        "macos",
+        "linux"
+      ],
+      "severity": "blocker",
+      "cause": "新版 Codex CLI 改成只走 OpenAI 的 Responses API（/v1/responses），不再用通用的 /v1/chat/completions。大多数第三方中转和国产模型只实现了 chat/completions，于是路径直接 404；有的中转做了转发但不支持 Responses 的请求体结构，就变成 400。判断要点：**同一个 key 在别的工具里能用，只有 Codex 不行**——这基本就锁定是协议不匹配，不是 key 或网络的问题。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先确认对方端点支不支持 Responses。拿你的地址试一下（把 BASE 和 KEY 换成自己的）：",
+            "cmd": "curl -s -o /dev/null -w \"%{http_code}\\n\" -X POST \"$BASE/v1/responses\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -d '{\"model\":\"gpt-4o-mini\",\"input\":\"hi\"}'",
+            "shell": "bash",
+            "risk": "read-only"
+          },
+          {
+            "desc": "返回 404 = 对方没有这个接口，Codex 就是用不了。换一个明确支持 Responses API 的服务商，或者用官方账号登录 Codex。",
+            "risk": "read-only"
+          },
+          {
+            "desc": "如果服务商说支持但仍 400，多半是模型 id 不对（Responses 对模型名更严）。先用服务商文档里给的 Responses 示例模型跑通，再换成你想用的。",
+            "risk": "low",
+            "rollback": "把 config.toml 里的 model 改回原值。"
+          },
+          {
+            "desc": "不想换服务商，就退回到还支持 chat/completions 的旧版 Codex（注意这会失去新版功能，属于权宜之计）。",
+            "cmd": "npm install -g @openai/codex@<旧版本号>",
+            "shell": "any",
+            "risk": "medium",
+            "rollback": "npm install -g @openai/codex 装回最新版。"
+          }
+        ],
+        "verify": "在 Codex 里正常发一句话并收到回复，不是报错也不是空响应。",
+        "auto": false
+      },
+      "evidence": "field",
+      "verified_on": {
+        "date": "2026-08-01",
+        "os": "Windows 11",
+        "note": "我们在自己的中转服务上验证过：只有把渠道改成透传（而不是做协议转换）Codex 才能通。DeepSeek 官方已原生支持 Responses API。"
+      },
+      "sources": [],
+      "uking": "U-King 配 Codex 时默认写的是已验证支持 Responses 的端点，不用自己试协议。",
+      "tags": [
+        "第三方端点",
+        "Responses API",
+        "404",
+        "中转"
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/codex.api.responses-only-thirdparty.html"
+    },
+    {
+      "id": "codex.install.bigbinary-slow-net",
+      "tool": "codex",
+      "title": "网速慢的机器上装 Codex 卡住不动，等半天最后失败",
+      "symptoms": [
+        "npm 装 Codex 卡在某个百分比很久，最后超时",
+        "反复重试都在同一个地方断",
+        "家里网/手机热点装不上，公司网就能装"
+      ],
+      "errors": [
+        "ETIMEDOUT",
+        "ECONNRESET",
+        "socket hang up",
+        "npm ERR! network"
+      ],
+      "platforms": [
+        "windows",
+        "macos",
+        "linux"
+      ],
+      "severity": "blocker",
+      "cause": "Codex 的平台二进制有几十上百 MB，npm 默认没有断点续传，网络一抖整个包就重来。在国内家庭宽带跨境拉包的场景下，一次成功的概率随文件大小指数下降——所以「重试几次就好了」经常是假象，真正需要的是换源或换传输方式。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先把超时放宽、重试次数拉高，别让 npm 早早放弃。",
+            "cmd": "npm config set fetch-timeout 600000 && npm config set fetch-retries 5 && npm config set fetch-retry-maxtimeout 120000",
+            "shell": "any",
+            "risk": "low",
+            "rollback": "npm config delete fetch-timeout fetch-retries fetch-retry-maxtimeout"
+          },
+          {
+            "desc": "换国内镜像重装（镜像对大文件的稳定性通常好得多）。",
+            "cmd": "npm install -g @openai/codex --registry=https://registry.npmmirror.com",
+            "shell": "any",
+            "risk": "low",
+            "rollback": "npm uninstall -g @openai/codex"
+          },
+          {
+            "desc": "还是断，就绕开 npm：直接用支持断点续传的下载器拿官方 release 二进制，下完放到 PATH 上的目录里。",
+            "risk": "low",
+            "rollback": "删掉该二进制文件。"
+          },
+          {
+            "desc": "挂了代理反而更慢的情况也很常见——代理节点带宽比直连差。两种都试一次再下结论，别默认「开代理一定更快」。",
+            "risk": "read-only"
+          }
+        ],
+        "verify": "codex --version 能打印版本；并且随便跑一句命令不报缺文件。",
+        "auto": true,
+        "uking_action": "runtime.stack.inspect"
+      },
+      "evidence": "field",
+      "verified_on": {
+        "date": "2026-08-01",
+        "os": "Windows 11",
+        "note": "客户机实测：同一台机器换镜像后从必失败变成一次成功。U-King 的安装流程内置了这套回退。"
+      },
+      "sources": [
+        "https://github.com/openai/codex/issues/13581"
+      ],
+      "uking": "U-King 装 Codex 会自动走镜像 + 多源回退 + 断点续传，慢网机器不用自己折腾。",
+      "tags": [
+        "安装",
+        "慢网",
+        "镜像",
+        "超时"
+      ],
+      "differential": [
+        {
+          "case": "codex.install.npm-subpackage-404",
+          "distinguish": "慢网卡很久才断；404 秒失败。",
+          "decisive_test": "失败耗时。"
+        }
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/codex.install.bigbinary-slow-net.html"
+    },
+    {
+      "id": "codex.install.npm-subpackage-404",
+      "tool": "codex",
+      "title": "npm 装 Codex 报 404，换个版本号又能装上",
+      "symptoms": [
+        "npm install -g @openai/codex 报 404 Not Found",
+        "官网说的最新版装不上，装旧一个版本就好了",
+        "装完了 codex 命令能跑，但一运行就说找不到二进制"
+      ],
+      "errors": [
+        "npm error 404 Not Found - GET https://registry.npmjs.org/@openai/codex",
+        "404 Not Found - GET .../@openai/codex-win32-x64",
+        "npm ERR! code E404"
+      ],
+      "platforms": [
+        "windows",
+        "macos",
+        "linux"
+      ],
+      "severity": "blocker",
+      "cause": "Codex 的 npm 包把平台原生二进制拆成了子包（@openai/codex-win32-x64 这类）。发版时主包和某个平台子包可能不同步上架，于是主包能解析、子包 404，表现成「这个版本装不上、上一个版本可以」。国内还叠加第二层原因：走代理或镜像时 registry 元数据可能是缓存的旧快照，拿到的版本号在真实 registry 上还不存在。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先看这个版本到底有没有真上架，别猜。",
+            "cmd": "npm view @openai/codex versions --json",
+            "shell": "any",
+            "risk": "read-only"
+          },
+          {
+            "desc": "退回上一个可用版本装（把 X.Y.Z 换成上一步列出来的、确实存在的版本）。",
+            "cmd": "npm install -g @openai/codex@X.Y.Z",
+            "shell": "any",
+            "risk": "low",
+            "rollback": "npm uninstall -g @openai/codex"
+          },
+          {
+            "desc": "如果是国内镜像/代理拿到旧元数据，绕过缓存重试一次。",
+            "cmd": "npm install -g @openai/codex --registry=https://registry.npmjs.org --prefer-online",
+            "shell": "any",
+            "risk": "low",
+            "rollback": "npm uninstall -g @openai/codex"
+          },
+          {
+            "desc": "还不行就直接下官方 release 里的独立二进制，不走 npm。",
+            "risk": "low",
+            "rollback": "删掉下载的二进制文件即可。"
+          }
+        ],
+        "verify": "codex --version 能打印版本号，且随便跑一句 codex 命令不报「找不到二进制」。",
+        "auto": true,
+        "uking_action": "runtime.stack.inspect"
+      },
+      "evidence": "field",
+      "verified_on": {
+        "date": "2026-08-01",
+        "os": "Windows 11 / macOS",
+        "note": "我们在客户机上多次遇到；U-King 的安装 skill 从 v24 起改成三源回退，就是为了绕开这条。上游 #31936 记录了同型问题。"
+      },
+      "sources": [
+        "https://github.com/openai/codex/issues/31936",
+        "https://github.com/openai/codex/issues/13581"
+      ],
+      "uking": "U-King 装 Codex 时会自动探测可用版本并三源回退，不需要手动挑版本号。",
+      "tags": [
+        "安装",
+        "npm",
+        "404",
+        "镜像"
+      ],
+      "aliases": [
+        "codex#31936"
+      ],
+      "differential": [
+        {
+          "case": "codex.install.bigbinary-slow-net",
+          "distinguish": "404 是服务器上没有这个文件，秒失败；慢网是卡很久才超时。",
+          "decisive_test": "看失败得快还是慢。几秒内报 404 = 这条；卡几分钟后 ETIMEDOUT = 慢网那条。"
+        },
+        {
+          "case": "shared.av.blocks-install",
+          "distinguish": "404 是根本没下下来；杀软是下下来了又被删。",
+          "decisive_test": "查杀软隔离区。有记录就是杀软那条。"
+        }
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/codex.install.npm-subpackage-404.html"
+    },
+    {
+      "id": "codex.proxy.localhost-elevated-sandbox",
+      "tool": "codex",
+      "title": "开了梯子再启动 Codex，弹「找不到指定的模块」、命令跑不了",
+      "symptoms": [
+        "用脚本/快捷方式带着代理启动 Codex，一执行命令就弹窗报错",
+        "从开始菜单正常打开没事，一挂代理就坏",
+        "弹窗提示 codex-windows-sandbox-setup.exe 找不到指定的模块",
+        "Codex 反复刷新防火墙/沙箱状态，改文件（apply_patch）失败"
+      ],
+      "errors": [
+        "codex-windows-sandbox-setup.exe 找不到指定的模块",
+        "elevated sandbox"
+      ],
+      "platforms": [
+        "windows"
+      ],
+      "severity": "blocker",
+      "diagnose": [
+        {
+          "id": "os",
+          "role": "precondition",
+          "kind": "os_is",
+          "name": "windows",
+          "expect": "pass",
+          "label": "当前是 Windows"
+        },
+        {
+          "id": "codex.cfg",
+          "role": "precondition",
+          "kind": "file_exists",
+          "path": "~/.codex/config.toml",
+          "expect": "pass",
+          "label": "装了 Codex"
+        },
+        {
+          "id": "proxy.loopback",
+          "role": "evidence",
+          "kind": "env_contains",
+          "name": "HTTPS_PROXY",
+          "value": "127.0.0.1",
+          "expect": "pass",
+          "label": "代理指向本机回环地址（梯子的本地端口）"
+        }
+      ],
+      "cause": "Codex 桌面版 Windows 的「提权沙箱」(sandbox = \"elevated\") 在启动时会读进程环境变量里的 HTTP_PROXY/HTTPS_PROXY。当代理指向本机回环地址（127.0.0.1:7897 这类梯子的本地端口）时，提权后的沙箱辅助进程处在另一个权限/网络上下文里，够不着这个回环端口，于是沙箱初始化失败，弹出 setup helper 的模块加载错误。国内用户几乎人人挂本地代理，所以这条在中国的命中率远高于海外。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先确认是不是这条：从开始菜单直接打开 Codex（不经过带代理的脚本/快捷方式），跑一条简单命令。如果不报错了，就是它。",
+            "risk": "read-only"
+          },
+          {
+            "desc": "方案 A（推荐）：把 Windows 沙箱模式从 elevated 改成 unelevated。编辑 ~/.codex/config.toml，加上这段。",
+            "cmd": "[windows]\nsandbox = \"unelevated\"",
+            "shell": "any",
+            "risk": "low",
+            "rollback": "把 sandbox 改回 \"elevated\" 或删掉这两行即可，改前先复制一份 config.toml。"
+          },
+          {
+            "desc": "方案 B：保留 elevated，改成不带代理环境变量启动 Codex（把代理交给系统代理设置，而不是进程环境变量）。",
+            "risk": "low",
+            "rollback": "恢复原来的启动脚本。"
+          },
+          {
+            "desc": "如果必须同时用本地代理和环境变量，确保 NO_PROXY 里带上回环地址，减少沙箱自检时绕道代理。",
+            "cmd": "NO_PROXY=localhost,127.0.0.1,::1",
+            "shell": "any",
+            "risk": "low",
+            "rollback": "删除该环境变量。"
+          }
+        ],
+        "verify": "重开 Codex，让它改一个文件（apply_patch）或跑一条 shell 命令，不再弹模块错误，且命令有正常输出。",
+        "auto": false
+      },
+      "evidence": "upstream-issue",
+      "verified_on": {
+        "date": "2026-08-01",
+        "tool_version": "Codex App 26.623.8305.0 / command runner 0.142.3",
+        "os": "Windows 11",
+        "note": "上游 issue 仍 open，方案 A/B 是提交者自己验证过的 workaround，我们未在客户机复现。"
+      },
+      "sources": [
+        "https://github.com/openai/codex/issues/30538"
+      ],
+      "tags": [
+        "代理",
+        "梯子",
+        "沙箱",
+        "Windows"
+      ],
+      "aliases": [
+        "codex#30538"
+      ],
+      "falsepositives": [
+        "挂本地代理本身完全正常。只有在同时用了 elevated 沙箱、且真的弹了模块错误时才算命中",
+        "config.toml 里已经是 sandbox = \"unelevated\" 的机器不受此影响，探针仍会亮"
+      ],
+      "differential": [
+        {
+          "case": "codex.proxy.websocket-system-proxy",
+          "distinguish": "沙箱那条是**完全不能用**（弹窗、命令跑不了）；WebSocket 那条是**能用但慢**。",
+          "decisive_test": "命令到底跑不跑得起来。跑得起来只是慢 = WebSocket 那条。"
+        }
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/codex.proxy.localhost-elevated-sandbox.html"
+    },
+    {
+      "id": "codex.proxy.websocket-system-proxy",
+      "tool": "codex",
+      "title": "Codex 特别慢／老是掉线，日志里在从 WebSocket 回落 HTTPS",
+      "symptoms": [
+        "能用但明显卡顿，回复一顿一顿的",
+        "日志里反复出现 falling back from WebSockets to HTTPS",
+        "在系统代理（IE/Windows 代理设置）下才这样，手动设环境变量就好了"
+      ],
+      "errors": [
+        "Falling back from WebSockets to HTTPS transport. request timed out"
+      ],
+      "platforms": [
+        "windows"
+      ],
+      "severity": "major",
+      "cause": "Codex 开了 network_proxy + respect_system_proxy 时，HTTPS 请求走得通 Windows 系统代理，但 WebSocket 传输那条路没有完整走系统代理解析器，握手超时后回落到 HTTPS 长轮询。回落本身不报错，所以用户只感觉「变慢了」，不知道发生了什么——这是最容易被误判成「模型慢」「网络差」的一类。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "把系统代理同样显式写成环境变量，让 WebSocket 那条路也能读到。PowerShell 当前会话临时生效：",
+            "cmd": "$env:HTTP_PROXY=\"http://127.0.0.1:7897\"; $env:HTTPS_PROXY=\"http://127.0.0.1:7897\"",
+            "shell": "powershell",
+            "risk": "low",
+            "rollback": "关掉这个终端窗口即失效；如果写进了用户环境变量，用同样方式删除即可。"
+          },
+          {
+            "desc": "端口换成你自己梯子的本地端口（常见 7890 / 7897 / 10809 / 1080）。不确定就在梯子软件里看「本地端口 / 混合端口」。",
+            "risk": "read-only"
+          },
+          {
+            "desc": "注意别和 codex.proxy.localhost-elevated-sandbox 撞车：如果加了环境变量之后弹「找不到指定的模块」，去看那条病例，改用 unelevated 沙箱。",
+            "risk": "read-only"
+          }
+        ],
+        "verify": "重开 Codex 跑一轮对话，日志里不再出现 falling back from WebSockets，且首字返回明显变快。",
+        "auto": false
+      },
+      "evidence": "upstream-issue",
+      "verified_on": {
+        "date": "2026-08-01",
+        "tool_version": "Codex App 0.142.1",
+        "os": "Windows 10",
+        "note": "上游 issue 仍 open。"
+      },
+      "sources": [
+        "https://github.com/openai/codex/issues/29958"
+      ],
+      "tags": [
+        "代理",
+        "慢",
+        "WebSocket",
+        "Windows"
+      ],
+      "aliases": [
+        "codex#29958"
+      ],
+      "differential": [
+        {
+          "case": "codex.proxy.localhost-elevated-sandbox",
+          "distinguish": "这条只是慢，那条根本用不了。",
+          "decisive_test": "有没有弹「找不到指定的模块」。"
+        }
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/codex.proxy.websocket-system-proxy.html"
+    },
+    {
+      "id": "codex.update.eperm-leftover",
+      "tool": "codex",
+      "title": "Codex 说升级成功了，但 npm 目录里留了一堆删不掉的垃圾",
+      "symptoms": [
+        "升级提示成功，之后再装别的东西就报 EPERM",
+        "npm 全局目录里多出 .codex-xxxx 这种临时文件夹",
+        "重装 Codex 时报文件被占用"
+      ],
+      "errors": [
+        "EPERM: operation not permitted, unlink",
+        "codex.exe",
+        "npm WARN cleanup"
+      ],
+      "platforms": [
+        "windows"
+      ],
+      "severity": "minor",
+      "cause": "Windows 上正在运行的 exe 会被系统锁住，删不掉。Codex 的自更新走 npm install -g，npm 换完新版后要清理旧的 codex.exe，此时如果还有 Codex 进程活着，unlink 就报 EPERM。npm 把它当成 warning 咽下去了，于是「升级成功」和「留下垃圾」同时成立——这类问题最坑的地方是它不报错，等到下次装东西才爆出来。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先把所有 Codex 进程关干净（含托盘里的桌面版），再动手。别用按名字杀进程的偏方，Windows 上重名的太多。",
+            "risk": "read-only"
+          },
+          {
+            "desc": "找到 npm 全局目录。",
+            "cmd": "npm root -g",
+            "shell": "any",
+            "risk": "read-only"
+          },
+          {
+            "desc": "进到上一步打印的目录，手动删掉里面形如 .codex-* 的临时文件夹。删之前先看一眼里面确实只有 codex 的残留。",
+            "risk": "low",
+            "rollback": "这些是升级残留的临时目录，删掉不影响已装好的 Codex；不放心可以先剪切到桌面放两天。"
+          },
+          {
+            "desc": "重装一次确保完整。",
+            "cmd": "npm install -g @openai/codex",
+            "shell": "any",
+            "risk": "low",
+            "rollback": "npm uninstall -g @openai/codex"
+          }
+        ],
+        "verify": "codex --version 正常；再跑一次 npm install -g 任意包不再报 EPERM。",
+        "auto": false
+      },
+      "evidence": "upstream-issue",
+      "verified_on": {
+        "date": "2026-08-01",
+        "tool_version": "codex-cli 0.130.0",
+        "os": "Windows 10/11",
+        "note": "上游 issue 仍 open，作者在 GitHub Actions Windows runner 上稳定复现。"
+      },
+      "sources": [
+        "https://github.com/openai/codex/issues/21872"
+      ],
+      "tags": [
+        "升级",
+        "EPERM",
+        "npm",
+        "Windows"
+      ],
+      "aliases": [
+        "codex#21872"
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/codex.update.eperm-leftover.html"
+    },
+    {
+      "id": "codex.wsl.nvm-path-missing",
+      "tool": "codex",
+      "title": "自己开终端一切正常，Codex 里却说 node / pnpm 找不到",
+      "symptoms": [
+        "同一台机器同一个项目，自己开 WSL 终端跑得好好的",
+        "Codex 里执行命令报 command not found: node",
+        "pnpm、corepack、yarn 也一样找不到"
+      ],
+      "errors": [
+        "command not found: node",
+        "command not found: pnpm",
+        "zsh: command not found"
+      ],
+      "platforms": [
+        "wsl",
+        "linux",
+        "macos"
+      ],
+      "severity": "blocker",
+      "cause": "nvm 不是把 node 装到固定路径，而是靠 shell 启动脚本（.bashrc / .zshrc）在**交互式**会话里临时改 PATH。Codex 执行命令时开的是非交互、非登录 shell，根本不加载这些启动脚本，于是 PATH 里没有 nvm 管理的 node。这就是「我自己敲能跑，AI 敲就不行」的最常见根因，和权限、沙箱都没关系。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "临时验证（在 Codex 里让它执行这几行，如果之后 node 就有了，说明确诊）：",
+            "cmd": "export NVM_DIR=\"$HOME/.nvm\"; . \"$NVM_DIR/nvm.sh\"; node -v",
+            "shell": "bash",
+            "risk": "read-only"
+          },
+          {
+            "desc": "根治方案 A（推荐）：把当前 nvm 版本的 node 目录固定写进非交互也能读到的 PATH。先查出真实路径：",
+            "cmd": "echo \"$NVM_DIR/versions/node/$(nvm current)/bin\"",
+            "shell": "bash",
+            "risk": "read-only"
+          },
+          {
+            "desc": "把上一步的路径追加到 ~/.profile（非交互 shell 也会读的那一层），而不是只写 .bashrc/.zshrc。",
+            "cmd": "echo 'export PATH=\"$HOME/.nvm/versions/node/v22.14.0/bin:$PATH\"' >> ~/.profile",
+            "shell": "bash",
+            "risk": "low",
+            "rollback": "编辑 ~/.profile 删掉这一行即可；改前先 cp ~/.profile ~/.profile.bak。"
+          },
+          {
+            "desc": "根治方案 B：干脆不用 nvm，用系统包管理器或官方安装包把 node 装到 /usr/local/bin 这类固定位置。多人协作机器推荐这条。",
+            "risk": "medium",
+            "rollback": "卸载系统 node，恢复用 nvm 的版本。"
+          }
+        ],
+        "verify": "在 Codex 里（不是自己的终端里）执行 node -v 和 pnpm -v，都能打印版本号。",
+        "auto": false
+      },
+      "evidence": "upstream-issue",
+      "verified_on": {
+        "date": "2026-08-01",
+        "tool_version": "Codex App 26.304.1528.0",
+        "os": "Windows 11 + WSL2",
+        "note": "上游 issue 仍 open；同一机制在 macOS 上用 nvm 时表现完全一样。"
+      },
+      "sources": [
+        "https://github.com/openai/codex/issues/13566"
+      ],
+      "tags": [
+        "PATH",
+        "nvm",
+        "WSL",
+        "command not found"
+      ],
+      "aliases": [
+        "codex#13566"
+      ],
+      "differential": [
+        {
+          "case": "claude-code.install.npmrc-bad-prefix",
+          "distinguish": "nvm 那条是**你自己敲能跑、AI 敲不能**；prefix 那条是你自己敲也不行。",
+          "decisive_test": "在自己的终端里敲同一条命令。你能跑 AI 不能 = nvm 这条。"
+        }
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/codex.wsl.nvm-path-missing.html"
+    },
+    {
+      "id": "shared.av.blocks-install",
+      "tool": "shared",
+      "title": "装到一半文件凭空消失 / 被杀毒软件删了，或提示这不是有效的应用程序",
+      "symptoms": [
+        "安装进行到一半突然失败，重试还是失败",
+        "刚下好的 exe 双击提示不是有效的 Win32 应用程序",
+        "装好的命令过一会儿就不见了",
+        "杀毒软件弹过窗但被自己点掉了，没在意"
+      ],
+      "errors": [
+        "不是有效的 Win32 应用程序",
+        "is not a valid Win32 application",
+        "拒绝访问",
+        "Access is denied",
+        "ENOENT: no such file or directory"
+      ],
+      "platforms": [
+        "windows"
+      ],
+      "severity": "blocker",
+      "cause": "两个独立机制常被混为一谈：① **杀软误报**——AI 工具装机脚本会下载二进制、改 PATH、写注册表，行为特征和恶意软件重合，Defender/360/火绒可能直接把文件删进隔离区。删除发生在安装过程中，于是报错落在下一步，看起来像「安装脚本有 bug」。② **文件本身下坏了**——从 U 盘拷贝或慢网下载被截断，exe 少了几十 KB，Windows 加载时报「不是有效的应用程序」。这两个的排查方式完全不同：一个查隔离区，一个比对文件大小/哈希。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先查隔离区——这是最快的一刀。打开 Windows 安全中心 → 病毒和威胁防护 → 保护历史记录，看有没有刚被隔离的文件。360/火绒同理看各自的隔离区。",
+            "risk": "read-only"
+          },
+          {
+            "desc": "找到了就点「还原」，并把安装目录加进白名单/信任区，再重装一次。",
+            "risk": "low",
+            "rollback": "在杀软里把该白名单条目删掉即可。"
+          },
+          {
+            "desc": "隔离区是空的 → 走第二条线：比对文件完整性。对着下载好的 exe 算哈希，和官方公布的比。",
+            "cmd": "certutil -hashfile \"文件路径.exe\" SHA256",
+            "shell": "cmd",
+            "risk": "read-only"
+          },
+          {
+            "desc": "对不上就是下坏了/拷坏了——重新下载，别用「继续传输」，删掉重下。U 盘拷贝出问题的概率比想象中高，尤其是杂牌盘。",
+            "risk": "low",
+            "rollback": "无需回滚。"
+          },
+          {
+            "desc": "⚠️ 别为了装个工具直接关掉实时防护就不管了。要临时关，装完立刻打开。",
+            "risk": "read-only"
+          }
+        ],
+        "verify": "重新安装能走完全程；装完的文件过十分钟还在（没被再次隔离）；命令能正常运行。",
+        "auto": false
+      },
+      "evidence": "field",
+      "verified_on": {
+        "date": "2026-08-01",
+        "os": "Windows 10 / 11",
+        "note": "两种机制我们都在客户机上实际遇到过：Defender 误报（Cloxer/Wacatac 家族）以及 U 盘拷贝导致 exe 截断。"
+      },
+      "sources": [],
+      "uking": "U-King 装机时会先做一次环境预检，能提前报出杀软拦截和文件不完整两类问题。",
+      "tags": [
+        "杀毒软件",
+        "误报",
+        "文件损坏",
+        "装不上"
+      ],
+      "differential": [
+        {
+          "case": "shared.cpu.sigill-old-machine",
+          "distinguish": "杀软是文件消失/装不完；老 CPU 是装得好好的但一启动就闪退。",
+          "decisive_test": "文件还在不在。文件在但跑不起来 = 老 CPU 那条。"
+        },
+        {
+          "case": "codex.install.bigbinary-slow-net",
+          "distinguish": "杀软删文件 vs 网络没下完，两者都表现为文件不完整。",
+          "decisive_test": "比对文件哈希 + 查隔离区。"
+        }
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/shared.av.blocks-install.html"
+    },
+    {
+      "id": "shared.cpu.sigill-old-machine",
+      "tool": "shared",
+      "title": "老电脑上工具一启动就闪退，没有任何报错",
+      "symptoms": [
+        "双击就没反应，或者黑窗一闪而过",
+        "命令行里跑直接退出，不打印任何东西",
+        "同样的安装包在新电脑上没问题",
+        "电脑是好几年前的老机器"
+      ],
+      "errors": [
+        "SIGILL",
+        "Illegal instruction",
+        "0xC000001D",
+        "STATUS_ILLEGAL_INSTRUCTION"
+      ],
+      "platforms": [
+        "windows",
+        "macos",
+        "linux"
+      ],
+      "severity": "blocker",
+      "cause": "现在的工具链默认按较新的 CPU 指令集编译（AVX/AVX2 之类）。老 CPU 上遇到不认识的指令，操作系统直接终止进程，不给任何用户可见的错误——所以现象是「什么都不显示就没了」。这是最容易被误判的一类：用户会以为是没装好、是杀软、是权限，反复重装几十遍都没用，因为问题根本不在软件安装上。**判据是：报错代码里出现 SIGILL 或 0xC000001D，或者在事件查看器里能看到「非法指令」。**",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先拿到证据，别猜。Windows 打开事件查看器 → Windows 日志 → 应用程序，找刚才崩溃那条，看异常代码是不是 0xC000001D。",
+            "risk": "read-only"
+          },
+          {
+            "desc": "Linux/macOS 直接在终端跑，看退出信号：",
+            "cmd": "codex --version; echo \"exit=$?\"",
+            "shell": "bash",
+            "risk": "read-only"
+          },
+          {
+            "desc": "确认是老 CPU 之后，先查它到底支持什么指令集，好判断有没有救。",
+            "cmd": "wmic cpu get name,description",
+            "shell": "cmd",
+            "risk": "read-only"
+          },
+          {
+            "desc": "找该工具的旧版本或「兼容/通用」构建版本装。有些项目会额外提供不依赖新指令集的构建。",
+            "risk": "low",
+            "rollback": "卸载旧版本装回最新版。"
+          },
+          {
+            "desc": "如果工具本身没有兼容构建，这台机器就是跑不了——换机器或用网页版。**这一条要早点告诉用户**，比让他继续重装二十遍强。",
+            "risk": "read-only"
+          }
+        ],
+        "verify": "工具能启动并打印版本号，不是一闪而过。",
+        "auto": false
+      },
+      "evidence": "field",
+      "verified_on": {
+        "date": "2026-08-01",
+        "os": "Windows 10",
+        "note": "客户机实证：老 CPU 触发 SIGILL，表现为静默闪退，反复重装无效。"
+      },
+      "sources": [],
+      "tags": [
+        "老电脑",
+        "闪退",
+        "SIGILL",
+        "CPU"
+      ],
+      "differential": [
+        {
+          "case": "shared.av.blocks-install",
+          "distinguish": "老 CPU 是文件完好但执行崩；杀软是文件被删。",
+          "decisive_test": "文件在不在 + 事件查看器里的异常代码是不是 0xC000001D。"
+        }
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/shared.cpu.sigill-old-machine.html"
+    },
+    {
+      "id": "shared.mac.tun-vpn-breaks-dns",
+      "tool": "shared",
+      "title": "Mac 上时好时坏：一会儿能用一会儿连不上，重启梯子就好一阵",
+      "symptoms": [
+        "同一个功能上午能用下午不能用",
+        "关掉梯子反而好了",
+        "重启代理软件能好一段时间，过会儿又坏",
+        "浏览器正常，命令行工具连不上"
+      ],
+      "errors": [
+        "getaddrinfo ENOTFOUND",
+        "EAI_AGAIN",
+        "fetch failed",
+        "Could not resolve host"
+      ],
+      "platforms": [
+        "macos"
+      ],
+      "severity": "major",
+      "cause": "代理软件的 TUN / 增强模式会接管整个系统的 DNS 解析。当机器上同时还有别的虚拟网卡（Tailscale、公司 VPN、Docker 网络），两边会抢 DNS 配置，结果是解析间歇性失败——表现就是「时好时坏」。浏览器往往感觉不到，因为它有自己的 DNS-over-HTTPS 兜底；命令行工具走系统解析，所以先坏。这类问题最难查的地方在于它不稳定，随便做点什么都像「修好了」，其实只是碰巧赶上一个好窗口。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先证明是 DNS 而不是网络。连着测两次，一次用域名一次用直连 IP：",
+            "cmd": "for i in 1 2 3 4 5; do dig +short api.anthropic.com | head -1; sleep 1; done",
+            "shell": "bash",
+            "risk": "read-only"
+          },
+          {
+            "desc": "结果时有时无（有几次是空的）→ 确诊 DNS 抢占。看看有哪些虚拟网卡在抢：",
+            "cmd": "scutil --dns | grep -A2 'resolver #' | head -30",
+            "shell": "bash",
+            "risk": "read-only"
+          },
+          {
+            "desc": "在代理软件里关掉 TUN / 增强模式，改用系统代理或规则模式。这一步通常立刻见效。",
+            "risk": "low",
+            "rollback": "在代理软件里重新打开 TUN 模式。"
+          },
+          {
+            "desc": "必须同时用 Tailscale 之类的服务时，在代理软件的规则里把它的域名和网段加进直连白名单，让两者别抢同一片流量。",
+            "risk": "low",
+            "rollback": "删掉这些白名单规则。"
+          },
+          {
+            "desc": "改完刷一次 DNS 缓存，别让旧的坏结果继续生效。",
+            "cmd": "sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder",
+            "shell": "bash",
+            "risk": "low",
+            "rollback": "无需回滚，缓存会自然重建。"
+          }
+        ],
+        "verify": "连续跑十次上面那条 dig，每次都能解析出地址；再连续用三次原来时好时坏的功能都正常。",
+        "auto": false
+      },
+      "evidence": "field",
+      "verified_on": {
+        "date": "2026-08-01",
+        "os": "macOS",
+        "note": "真实排查：某代理软件的 TUN 模式和 Tailscale 抢 DNS，导致 AI 作图功能时好时坏，关掉 TUN 后恢复。"
+      },
+      "sources": [],
+      "tags": [
+        "macOS",
+        "DNS",
+        "梯子",
+        "时好时坏"
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/shared.mac.tun-vpn-breaks-dns.html"
+    },
+    {
+      "id": "shared.pm.command-hijacked",
+      "tool": "shared",
+      "title": "敲 claude / codex 打开的不是我装的那个，或者版本对不上",
+      "symptoms": [
+        "命令能跑，但界面/版本和官方的不一样",
+        "刚更新完，一敲还是旧版本",
+        "装过好几家的 AI 助手包，之后命令就乱了",
+        "改了配置没生效，怀疑改错了地方"
+      ],
+      "errors": [],
+      "platforms": [
+        "windows",
+        "macos",
+        "linux"
+      ],
+      "severity": "major",
+      "diagnose": [
+        {
+          "id": "dup.claude",
+          "role": "evidence",
+          "kind": "path_duplicates",
+          "name": "claude",
+          "expect": "pass",
+          "label": "PATH 上有多个 claude"
+        },
+        {
+          "id": "dup.codex",
+          "role": "evidence",
+          "kind": "path_duplicates",
+          "name": "codex",
+          "expect": "pass",
+          "label": "PATH 上有多个 codex"
+        }
+      ],
+      "cause": "PATH 是按顺序找的，第一个匹配就赢。装过多家 AI 工具包的机器上，`claude` / `codex` / `openclaw` 这些通用命令名会被不同厂商各写一份（有的是真程序，有的是转发脚本），谁的目录在 PATH 前面谁生效。用户以为自己在用 A，实际跑的是 B——于是「改了配置没生效」「更新了还是旧版」这类怪现象全都说得通了。**这类问题最大的特征是：一切都没报错，只是行为不对。**",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先看这个命令到底解析到哪个文件。Windows 会把所有匹配都列出来，第一行才是实际生效的：",
+            "cmd": "where.exe claude",
+            "shell": "cmd",
+            "risk": "read-only"
+          },
+          {
+            "desc": "macOS / Linux 用这条，-a 同样会列出全部候选：",
+            "cmd": "which -a claude",
+            "shell": "bash",
+            "risk": "read-only"
+          },
+          {
+            "desc": "如果列出多条，确认第一条是不是你想要的。不是的话，把你想用的那个目录调到 PATH 更前面——**优先调顺序，不要急着删别人的文件**，删了可能把另一个工具搞坏。",
+            "risk": "medium",
+            "rollback": "把 PATH 顺序改回原样；改前先导出备份（见 shared.win.path-broken-system32 的备份步骤）。"
+          },
+          {
+            "desc": "确认修好之后再核对一次版本，别只看命令能跑。",
+            "cmd": "claude --version",
+            "shell": "any",
+            "risk": "read-only"
+          }
+        ],
+        "verify": "where/which 的第一行指向你期望的那个安装位置，且 --version 打印的版本和你刚装的一致。",
+        "auto": false
+      },
+      "evidence": "field",
+      "verified_on": {
+        "date": "2026-08-01",
+        "os": "Windows 11 / macOS",
+        "note": "客户机实见：多家 AI 工具包互相抢同名命令，用户完全无感，只觉得「配置怎么改都没用」。"
+      },
+      "sources": [],
+      "uking": "U-King 的环境体检会列出每个命令实际解析到的路径和版本，撞名一眼可见。",
+      "tags": [
+        "PATH",
+        "命令冲突",
+        "版本不对",
+        "多厂商"
+      ],
+      "diagnose_match": "any",
+      "falsepositives": [
+        "同一个包管理器会同时放 .cmd 和 .ps1 两个 shim，指向同一个实现，会被数成两个但没有冲突",
+        "nvm / fnm / asdf 这类版本管理器天然会有多份同名命令，属正常现象"
+      ],
+      "differential": [
+        {
+          "case": "claude-code.install.npmrc-bad-prefix",
+          "distinguish": "撞名是找得到但版本/行为不对；prefix 是压根找不到。",
+          "decisive_test": "where/which 输出几行。多行 = 这条。"
+        }
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/shared.pm.command-hijacked.html"
+    },
+    {
+      "id": "shared.win.chinese-username-path",
+      "tool": "shared",
+      "title": "用户名是中文 / 装在 OneDrive 里，装完能跑但一用就出乱码或找不到文件",
+      "symptoms": [
+        "路径里有中文，脚本报找不到文件",
+        "日志里出现问号或方块乱码",
+        "文档在 OneDrive 同步目录里，工具时不时读不到",
+        "同样的操作在同事电脑上没问题"
+      ],
+      "errors": [
+        "系统找不到指定的文件",
+        "The system cannot find the file specified",
+        "ENOENT",
+        "UnicodeDecodeError",
+        "MODULE_NOT_FOUND"
+      ],
+      "platforms": [
+        "windows"
+      ],
+      "severity": "major",
+      "diagnose": [
+        {
+          "id": "os",
+          "role": "precondition",
+          "kind": "os_is",
+          "name": "windows",
+          "expect": "pass",
+          "label": "当前是 Windows"
+        },
+        {
+          "id": "user.cjk",
+          "role": "evidence",
+          "kind": "env_nonascii",
+          "name": "USERPROFILE",
+          "expect": "pass",
+          "label": "用户目录里有中文"
+        }
+      ],
+      "cause": "三个独立的坑经常同时出现在同一台家用机上：① 中文用户名——C:\\Users\\张三\\ 这类路径，遇到没做好编码处理的脚本（尤其是 .bat 和一些 Python 工具）会变成乱码找不到文件，因为 cmd 默认按 GBK 解码而脚本常是 UTF-8；② OneDrive 接管了文档/桌面——文件可能只是个占位符没真正下载到本地，程序打开时就 ENOENT；③ 路径过长——Windows 默认 260 字符上限，node_modules 这种深目录很容易超。这三条都不会给你「路径有问题」这样的提示，只会给一个看起来无关的报错。",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先确认自己的用户目录是不是中文：",
+            "cmd": "echo %USERPROFILE%",
+            "shell": "cmd",
+            "risk": "read-only"
+          },
+          {
+            "desc": "最省事的办法：把 AI 工具和工作目录都放到纯英文的短路径下，比如 D:\\ai 或 C:\\ai。不要放在桌面、文档、OneDrive 里。",
+            "risk": "low",
+            "rollback": "把目录移回原位置即可。"
+          },
+          {
+            "desc": "如果项目必须在 OneDrive 目录里，右键该文件夹 → 「始终保留在此设备上」，让文件真正落到本地。",
+            "risk": "low",
+            "rollback": "改回「按需下载」。"
+          },
+          {
+            "desc": "打开长路径支持（需要管理员，改完重启）。",
+            "cmd": "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\" /v LongPathsEnabled /t REG_DWORD /d 1 /f",
+            "shell": "cmd",
+            "risk": "medium",
+            "rollback": "把命令末尾的 /d 1 改成 /d 0 再跑一次。"
+          },
+          {
+            "desc": "改用户名本身不推荐——Windows 改账户显示名不会改用户目录名，真要改得新建账户迁移，代价远大于换个工作目录。",
+            "risk": "read-only"
+          }
+        ],
+        "verify": "把工具和项目挪到纯英文短路径后重跑一次原来失败的操作，能正常完成。",
+        "auto": false
+      },
+      "evidence": "field",
+      "verified_on": {
+        "date": "2026-08-01",
+        "os": "Windows 10 / 11",
+        "note": "客户机高频。中文路径 + GBK/UTF-8 解码不一致，我们在自己的升级脚本上也栽过同一个坑。"
+      },
+      "sources": [],
+      "uking": "U-King 装机前会做一次「脆弱环境」预检，OneDrive、中文用户名、长路径三项都会提前提示。",
+      "tags": [
+        "中文路径",
+        "OneDrive",
+        "长路径",
+        "编码"
+      ],
+      "falsepositives": [
+        "中文用户名不必然出问题。只有遇到没做编码处理的脚本时才会炸，很多人用了多年没事"
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/shared.win.chinese-username-path.html"
+    },
+    {
+      "id": "shared.win.path-broken-system32",
+      "tool": "shared",
+      "title": "什么都装不上，连 where、tasklist 这些系统命令都找不到",
+      "symptoms": [
+        "装任何 AI 工具都失败，报错五花八门",
+        "命令行里敲 where 或 ipconfig 提示不是内部或外部命令",
+        "以前用过某些「系统优化 / 清理 / 修改 PATH」的工具",
+        "别人机器同样步骤能装，就这台不行"
+      ],
+      "errors": [
+        "不是内部或外部命令",
+        "is not recognized as an internal or external command",
+        "The system cannot find the path specified"
+      ],
+      "platforms": [
+        "windows"
+      ],
+      "severity": "blocker",
+      "diagnose": [
+        {
+          "id": "os",
+          "role": "precondition",
+          "kind": "os_is",
+          "name": "windows",
+          "expect": "pass",
+          "label": "当前是 Windows"
+        },
+        {
+          "id": "where.gone",
+          "role": "evidence",
+          "kind": "path_has",
+          "name": "where",
+          "expect": "fail",
+          "label": "连系统自带的 where 都找不到"
+        }
+      ],
+      "cause": "Windows 的 PATH 环境变量被改坏了，把 %SystemRoot%\\system32 这类系统目录弄丢了。常见来源：某些「优化大师 / 清理工具」重写 PATH、手动编辑时把整串覆盖掉、或者装某个软件时它的安装脚本把 PATH 截断了（PATH 有长度上限，超了会被截）。一旦 system32 掉了，几乎所有安装脚本都会挂，但报错各不相同——所以现象看起来是「什么都装不上」，很容易被误判成系统中毒或要重装。**判据很干脆：连 where 都找不到，就是它。**",
+      "fix": {
+        "steps": [
+          {
+            "desc": "先看现在的 PATH 长什么样（用完整路径调用，绕开坏掉的 PATH）：",
+            "cmd": "C:\\Windows\\System32\\cmd.exe /c echo %PATH%",
+            "shell": "cmd",
+            "risk": "read-only"
+          },
+          {
+            "desc": "确认缺的是系统目录。正常的用户机 PATH 里必须能看到 C:\\Windows\\system32、C:\\Windows 和 C:\\Windows\\System32\\Wbem。",
+            "risk": "read-only"
+          },
+          {
+            "desc": "先备份当前 PATH，出问题能回。",
+            "cmd": "C:\\Windows\\System32\\reg.exe export \"HKCU\\Environment\" %USERPROFILE%\\Desktop\\path-backup.reg",
+            "shell": "cmd",
+            "risk": "low",
+            "rollback": "双击桌面上的 path-backup.reg 导回。"
+          },
+          {
+            "desc": "用「系统属性 → 环境变量」界面手工把缺的系统目录补回**系统变量**里的 Path（不是用户变量）。图形界面比命令行安全，能看到每一条。",
+            "risk": "medium",
+            "rollback": "用上一步的 .reg 备份还原，或在同一界面删掉刚加的条目。"
+          },
+          {
+            "desc": "改完必须重开终端（最好注销重登），否则旧进程还是旧 PATH。",
+            "risk": "read-only"
+          }
+        ],
+        "verify": "新开一个 cmd，敲 where notepad 能打印路径；再跑一次原来失败的安装命令，能正常往下走。",
+        "auto": false
+      },
+      "evidence": "field",
+      "verified_on": {
+        "date": "2026-08-01",
+        "os": "Windows 10 / 11",
+        "note": "真实客户机排查所得。这台机器上所有 AI 工具装机全失败，根因就是 PATH 里丢了 system32。"
+      },
+      "sources": [],
+      "uking": "U-King 的环境体检会直接报出 PATH 是否缺系统目录，不用自己一条条数。",
+      "tags": [
+        "PATH",
+        "系统损坏",
+        "装不上",
+        "Windows"
+      ],
+      "falsepositives": [
+        "在 MSYS2 / Cygwin / 容器这类纯 POSIX 环境里跑，本来就没有 where 命令，机器是好的",
+        "精简版系统镜像可能删掉了部分系统工具，但不影响 AI 工具运行"
+      ],
+      "stale": false,
+      "url": "https://u-claw.org.cn/rescue/shared.win.path-broken-system32.html"
+    }
+  ]
+}

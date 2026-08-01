@@ -30,6 +30,17 @@ jobs:
           node scripts/build-skill.mjs
           node scripts/build-uking-feed.mjs
 
+      # cases.json 是提交进仓库的生成物，raw.githubusercontent 靠它给
+      # `npx u-rescue update` 兜底。忘了重新生成，用户拉到的就是旧库 —— 且没人会发现。
+      - name: cases.json 必须是最新的
+        run: |
+          node scripts/build-index.mjs
+          if ! git diff --exit-code cases.json; then
+            echo ""
+            echo "✗ cases.json 过期了。本地跑一次 npm run build:index 再提交。"
+            exit 1
+          fi
+
   # 病例会过期。每周提醒一次哪些该复核了，而不是等它们悄悄烂掉。
   staleness:
     runs-on: ubuntu-latest
