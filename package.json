@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "bin": { "u-rescue": "./bin/u-rescue.mjs" },
   "engines": { "node": ">=18" },
-  "files": ["bin/", "lib/", "cases/", "schema/", "README.md", "LICENSE"],
+  "files": ["bin/", "lib/", "cases/", "schema/", "README.md", "README.en.md", "LICENSE"],
   "scripts": {
     "doctor": "node bin/u-rescue.mjs doctor",
     "validate": "node scripts/validate.mjs",

@@ -3,11 +3,30 @@
 > Codex / Claude Code 装不上、连不上、报错了怎么修。
 > 每条病例都写清楚：**什么症状 → 为什么 → 怎么修 → 怎么撤回 → 怎么验证真修好了。**
 
+**简体中文** · [English](./README.en.md)
+
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+[![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E%3D18-339933.svg)](package.json)
+[![CI](https://img.shields.io/github/actions/workflow/status/dongsheng123132/u-rescue/ci.yml?branch=main&label=CI)](https://github.com/dongsheng123132/u-rescue/actions)
+
 国内用 AI 编程工具，卡住的往往不是模型，是环境：梯子、杀软、PATH、中文路径、npm 镜像、WSL。
 这些坑散落在几万条 GitHub issue 和各种过期博客里，小白根本捞不出来。这个库把它们整理成结构化病例。
 
-**现在有 18 条病例。** 全部标注了来源可信度 —— 我们真机验过的，和只是上游 issue 记录的，
+**现在有 19 条病例。** 全部标注了来源可信度 —— 我们真机验过的，和只是上游 issue 记录的，
 在这里是**两种东西**，不会混着卖给你。
+
+---
+
+## 目录
+
+- [直接用](#直接用不用装不会动你的机器)
+- [病例从哪来](#病例从哪来收集机制)
+- [它为什么值得信](#它为什么值得信)
+- [怎么贡献一条病例](#怎么贡献一条病例)
+- [站在谁的肩膀上](#站在谁的肩膀上)
+- [生成产物](#生成产物)
+- [项目状态与期望值](#项目状态与期望值)
+- [关于 U-King](#关于-u-king)
 
 ---
 
@@ -32,17 +51,16 @@ npx u-rescue doctor --json
 
 需要 Node 18+。**这个工具只诊断，不替你执行修复** —— 步骤打印出来，你看懂了自己敲。
 
-### 关于自动更新
-
-病例库会持续补充，所以 `search` 在本地库超过 7 天没同步时会顺手拉一次（**硬超时 4 秒**，
-拉不到就静静用内置的，绝不阻断）。`--fresh` 强制先拉，`--offline` 完全不联网。
-
-**`doctor` 永远不自动联网。** 那正是「机器已经坏了」的场景 —— 网络本身可能就是病因，
-卡在那儿会把唯一还能用的工具也毁掉。所以它改成主动提示你库有多旧。
-
-拉回来的数据会**重新过一遍探针白名单和 `SAFE_BINS`**，任何一条不合规就**整包拒绝**、
-继续用内置的。远端被投毒或被运营商劫持，最坏结果仍然只是「给出一条错误建议」。
-冒烟测试里有三条专门守着这个。
+> [!NOTE]
+> 病例库会持续补充，所以 `search` 在本地库超过 7 天没同步时会顺手拉一次
+> （**硬超时 4 秒**，拉不到就静静用内置的，绝不阻断）。`--fresh` 强制先拉，`--offline` 完全不联网。
+>
+> **`doctor` 永远不自动联网。** 那正是「机器已经坏了」的场景 —— 网络本身可能就是病因，
+> 卡在那儿会把唯一还能用的工具也毁掉。所以它只主动提示你库有多旧。
+>
+> 拉回来的数据会**重新过一遍探针白名单和 `SAFE_BINS`**，任何一条不合规就**整包拒绝**、
+> 继续用内置的。远端被投毒或被运营商劫持，最坏结果仍然只是「给出一条错误建议」。
+> 冒烟测试里有三条专门守着这个。
 
 网页版（不用命令行）：<https://u-claw.org.cn/rescue/>
 
@@ -71,9 +89,11 @@ npm run harvest -- --source codex --limit 30
 去重靠 `aliases`（`codex#30538` 这种），CI 会查重复 —— 没有它，同一个 issue
 每次采集都会被抓成新病例。
 
+---
+
 ## 它为什么值得信
 
-这类库最容易变成「一堆看着有理、实则没人验证过的偏方」。我们用四条硬约束挡住：
+这类库最容易变成「一堆看着有理、实则没人验证过的偏方」。我们用几条硬约束挡住：
 
 **① 分清「我们验过」和「网上说的」。**
 每条病例必填 `evidence` 字段：`field`（我们在真实机器上验过）/ `reproduced`（我们复现过）/
@@ -130,6 +150,8 @@ node scripts/validate.mjs
 详见 [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)，
 完整规范（字段定义、采集流程、接入方式、导流边界）见 [docs/SPEC.md](docs/SPEC.md)。
 
+---
+
 ## 站在谁的肩膀上
 
 这类结构化知识库有成熟范式，我们照着抄而不是自创：
@@ -141,15 +163,18 @@ node scripts/validate.mjs
 | [google/osv.dev](https://github.com/google/osv.dev) | 多源自动 ingestion → 归一化 → 人工审核 |
 | [github/advisory-database](https://github.com/github/advisory-database) | 「自动收 + 人工过」两段式 |
 
+没抄：流水号 ID（要 URL 友好）、YAML（JSON 对前端和 AI 更省事）、
+任何形式的「客户端静默拉取并执行远程规则」。
+
 ---
 
 ## 生成产物
 
-同一份病例 JSON 出三种东西，改一处三处同步：
+同一份病例 JSON 出四种东西，改一处四处同步：
 
 | 命令 | 产物 | 给谁用 |
 |---|---|---|
-| `npm run build:site` | `dist/site/` 静态中文网页 + `sitemap.xml` + `cases.json` | 小白（搜索/AI 问答进来的人） |
+| `npm run build:site` | `dist/site/` 静态网页 + `sitemap.xml` + `cases.json` | 小白（搜索/AI 问答进来的人） |
 | `npm run build:skill` | `dist/skill/SKILL.md` + `AGENTS.md` + `manifest.json` | 装进 Claude Code / Codex，或上架技能市场 |
 | `npm run build:uking` | `dist/uking/` 热下发 JSON（两种格式） | U-King 图形界面版 |
 | `npx u-rescue` | 命令行只读诊断 | 开发者、远程排障、AI 调用 |
