@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.require-explicit-sandbox-permissions-with-shell-",
+  "tool": "codex",
+  "title": "Require explicit sandbox permissions with shell justifications",
+  "symptoms": [
+    "Require explicit sandbox permissions with shell justifications"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-03",
+    "note": "自动采集自 codex#36350，尚未验证"
+  },
+  "aliases": [
+    "codex#36350"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/36350"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 1,
+    "created": "2026-07-31",
+    "body_excerpt": "Require explicit sandbox permissions with shell justifications\n\n## What changed\n\nReject `shell_command` and unified `exec_command` calls that provide a\n`justification` without also specifying `sandbox_permissions`. The\nmodel-visible error tells callers to explicitly request `require_escalated`\nexecution or omit the justification.\n\n## Testing\n\n- Add unit coverage for `shell_command` argument validation.\n- Add integration coverage for both shell tool paths, including verification\n  that rejected unified exec calls do not begin execution.\n\n<!-- copyberry-projection-id: 7ed611513b6040ba8e6eaa5a0b0ff4458649f02f34e5e925695a9e09b7365eab -->"
+  }
+}

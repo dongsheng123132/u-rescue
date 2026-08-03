@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.record-normalized-sandbox-violation-events",
+  "tool": "codex",
+  "title": "Record normalized sandbox violation events",
+  "symptoms": [
+    "Record normalized sandbox violation events"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-03",
+    "note": "自动采集自 codex#36207，尚未验证"
+  },
+  "aliases": [
+    "codex#36207"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/36207"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-07-30",
+    "body_excerpt": "Record normalized sandbox violation events\n\n## Why\n\nFilesystem denials and managed-network blocks did not share a structured event\nshape, requiring downstream consumers to rediscover enforcement paths and parse\nbackend-specific output. See https://github.com/openai/codex/pull/17573.\n\n## What changed\n\n- Add normalized filesystem and network violation types in `codex-sandboxing`\n  and emit them through a shared tracing seam.\n- Classify filesystem denials by backend and reason, retaining an optional path\n  and bounded output snippet, and preserve managed-network block context.\n- Report the sandbox type through exec-server responses so unified exec can\n  classify remote denials without guessing; omitted values remain compatible\n  with older peers.\n- Record violations from exec, apply-patch, shell-escalation, unified-exec, and\n  managed-network enforcement paths without changing denial behavior.\n\n## Testing\n\n- Cover filesystem classification, path extraction, `SIGSYS`, network event\n  conversion, protocol compatibility, and remote sandbox-type propagation.\n\n<!-- copyberry-projection-id: d088480c8ea6ab813e794f7b6e5ee9b37383b65bbb88e60642394c9ffba8c6d4 -->"
+  }
+}
