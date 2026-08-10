@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.keep-response-streams-alive-through-connection-f",
+  "tool": "codex",
+  "title": "Keep response streams alive through connection failures",
+  "symptoms": [
+    "Keep response streams alive through connection failures"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-10",
+    "note": "自动采集自 codex#37485，尚未验证"
+  },
+  "aliases": [
+    "codex#37485"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/37485"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-08-07",
+    "body_excerpt": "Keep response streams alive through connection failures\n\n## What changed\n\n- Classify HTTP connection failures separately from other network errors without exposing request URLs.\n- For sampling requests, retry connection failures with exponential delays from 5 to 60 seconds and show a `Reconnecting... waiting for network` stream error.\n- Preserve the normal stream retry budget while waiting for the provider to become reachable. Keep the existing bounded retry behavior for other retryable errors.\n\n## Testing\n\n- Verify connection errors are classified without leaking URL contents.\n- Verify a turn recovers after its provider becomes reachable and still applies the configured retry limit to a subsequent incomplete stream.\n\n<!-- copyberry-projection-id: 87d0b2740842f731fb08563b39603601aa8f6c528242494fa921df1bbdeca391 -->"
+  }
+}

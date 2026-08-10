@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.improve-plugin-install-failure-analytics",
+  "tool": "codex",
+  "title": "Improve plugin install failure analytics",
+  "symptoms": [
+    "Improve plugin install failure analytics"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-10",
+    "note": "自动采集自 codex#37645，尚未验证"
+  },
+  "aliases": [
+    "codex#37645"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/37645"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 1,
+    "created": "2026-08-09",
+    "body_excerpt": "Improve plugin install failure analytics\n\n## Why\n\nPlugin install failures need stable, low-cardinality details that distinguish\nactionable causes without relying on error messages.\n\n## What changed\n\n- Add HTTP status subtypes for remote catalog, mutation, and bundle download\n  failures, including specific common statuses and a general `http_5xx` bucket.\n- Emit failure analytics when a remote plugin is disabled by an administrator or\n  unavailable under its install policy.\n- Preserve marketplace I/O, configuration, and task failure subtypes, including\n  failures that occur before a plugin ID can be resolved.\n\n## Testing\n\nAdd app-server coverage for catalog and install HTTP failures, unavailable\nremote plugins, unreadable marketplace files, and oversized bundle error\nresponses.\n\n<!-- copyberry-projection-id: ca2d3facdac3c0c7db751e4eb6cabd30248b475d15aee32ee85018c4886414e4 -->"
+  }
+}
