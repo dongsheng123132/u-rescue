@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.improve-codex-doctor-network-diagnostics",
+  "tool": "codex",
+  "title": "Improve `codex doctor` network diagnostics",
+  "symptoms": [
+    "Improve `codex doctor` network diagnostics"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-17",
+    "note": "自动采集自 codex#38918，尚未验证"
+  },
+  "aliases": [
+    "codex#38918"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/38918"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 0,
+    "created": "2026-08-17",
+    "body_excerpt": "Improve `codex doctor` network diagnostics\n\n## What changed\n\n- Probe the configured Responses inference endpoint with Codex's route-aware HTTP client, including configured proxy and custom CA behavior.\n- Classify TLS, proxy authentication, proxy configuration, resolution, and timeout failures into actionable diagnostics.\n- Report privacy-safe macOS system proxy state and suggest enabling `respect_system_proxy` when a configured proxy is otherwise unused.\n- Preserve system-root fallback when a custom CA is invalid, and account for provider-specific API key configuration when selecting the probe route.\n\n## Testing\n\n- Cover inference endpoint selection, invalid custom CA fallback, proxy authentication failures, TLS classification, and macOS proxy reporting.\n\n<!-- copyberry-projection-id: de36dc4e367a924302b5490f47c4c1b9ff57a95cb0016ab40a5e993f14b81b0b -->"
+  }
+}

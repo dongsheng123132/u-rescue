@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.keep-the-composer-editable-during-tui-startup",
+  "tool": "codex",
+  "title": "Keep the composer editable during TUI startup",
+  "symptoms": [
+    "Keep the composer editable during TUI startup"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-17",
+    "note": "自动采集自 codex#38642，尚未验证"
+  },
+  "aliases": [
+    "codex#38642"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/38642"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-08-14",
+    "body_excerpt": "Keep the composer editable during TUI startup\n\n## Why\n\nConfiguration and app-server initialization can take time before the main TUI is ready, leaving users unable to begin drafting a prompt.\n\n## What changed\n\n- Show a provisional composer while startup work runs and carry its text, cursor position, paste state, and attachments into the initialized chat.\n- Limit the provisional composer to safe editing and cancellation, and quarantine input around session pickers, approvals, and other actionable startup screens.\n- Preserve configuration validation before terminal checks and recover terminal state cleanly from startup failures and caught panics.\n\n## Testing\n\n- Cover startup editing, multiline and large pastes, keymaps, cancellation, session-picker handoff, approval boundaries, and draft restoration.\n- Verify non-interactive launches report configuration errors before terminal errors.\n\n<!-- copyberry-projection-id: 1c56dd5d8764dee8b8e5cd29162d8b3b36d9cc8ea0f705b8918488c903a79754 -->"
+  }
+}
