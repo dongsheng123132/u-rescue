@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.enforce-environment-network-policies-for-remote-",
+  "tool": "codex",
+  "title": "Enforce environment network policies for remote execution",
+  "symptoms": [
+    "Enforce environment network policies for remote execution"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-08-24",
+    "note": "自动采集自 codex#39980，尚未验证"
+  },
+  "aliases": [
+    "codex#39980"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/39980"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 1,
+    "created": "2026-08-21",
+    "body_excerpt": "Enforce environment network policies for remote execution\n\n## Why\n\n`EnvironmentConfig.network_policy` could describe attachment-owned traffic\nrestrictions, but core rejected every configured policy because execution did\nnot enforce it.\n\n## What changed\n\n- Resolve each remote environment's network policy for the selected command\n  and apply it to the execution-scoped proxy.\n- Compose owner rules with controller constraints and saved network decisions\n  while preserving inherited domain and Unix-socket denials.\n- Keep strict allowlists non-expandable, allow reviewable policies to use\n  network approvals, and reject sandbox escalation that would bypass an owner\n  policy.\n- Reject policies for local execution, disabled managed enforcement, or a\n  disabled controller proxy.\n\n## Testing\n\nAdded coverage for policy composition, scoped remote proxy behavior, approval\nand denial flows, offline execution, and unsupported environment authority.\n\n<!-- copyberry-projection-id: 3e94f657cf9f74ad84705fdb39113eb98d0a2df8742d329aa507231a7d2c7c51 -->"
+  }
+}
