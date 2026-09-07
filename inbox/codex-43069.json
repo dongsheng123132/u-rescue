@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.support-managed-worktrees-for-interactive-sessio",
+  "tool": "codex",
+  "title": "Support managed worktrees for interactive sessions and forks",
+  "symptoms": [
+    "Support managed worktrees for interactive sessions and forks"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-09-07",
+    "note": "自动采集自 codex#43069，尚未验证"
+  },
+  "aliases": [
+    "codex#43069"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/43069"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 0,
+    "created": "2026-09-05",
+    "body_excerpt": "Support managed worktrees for interactive sessions and forks\n\n## Why\n\n`--worktree` previously supported only `codex exec` and `codex exec fork`. Interactive sessions need the same managed checkout support, with configuration and policy resolved for the destination before starting a turn.\n\n## What changed\n\n- Enable `codex --worktree` and `codex fork --worktree <session-id>` behind the `worktrees` feature, restricted to local sessions. Interactive forks require an explicit session selector.\n- Resolve interactive and exec worktree forks from the session's latest saved working directory unless `--cd` is supplied. Keep relative `--add-dir` paths anchored to the invocation directory.\n- Load interactive destination configuration before telemetry and login policy initialization, and bind checkout ownership before the first turn.\n- Reject explicitly untrusted sources, including when destination cloud policy or refreshed configuration reveals distrust. Retain unbound interactive checkouts after startup failure and report manual recovery instructions.\n\n## Testing\n\nAdd CLI integration and TUI tests for startup and named forks, destination instructions and configuration, ownership before the fi"
+  }
+}
