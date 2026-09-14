@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.add-managed-network-policy-support-to-the-window",
+  "tool": "codex",
+  "title": "Add managed network policy support to the Windows MXC sandbox",
+  "symptoms": [
+    "Add managed network policy support to the Windows MXC sandbox"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-09-14",
+    "note": "自动采集自 codex#44872，尚未验证"
+  },
+  "aliases": [
+    "codex#44872"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/44872"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 1,
+    "created": "2026-09-11",
+    "body_excerpt": "Add managed network policy support to the Windows MXC sandbox\n\n## What changed\n\nAdd `create_command_args()` to encode argv, permissions, policy cwd, and optional managed network context through the existing bounded environment transport.\n\nFor managed networking, generate a policy that allows IPv4 and IPv6 loopback while denying direct non-loopback egress and general inbound access. Require nonempty, nonzero proxy ports and reject `allow_local_binding=false` at both launcher and policy boundaries because native host-loopback access is bidirectional.\n\nDocument the MXC launch contract, platform requirements, and limitations.\n\n## Testing\n\nAdd portable tests covering managed network transport and policy translation, plus rejection of missing proxy ports, zero ports, and unsupported local-binding restrictions at both boundaries.\n\n<!-- copyberry-projection-id: 16aba482b4079dc90c6f934598cc80f0f2595966e339b161b0255bcfc8849e2c -->"
+  }
+}

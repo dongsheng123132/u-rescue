@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.bundle-native-voice-runtimes-in-windows-releases",
+  "tool": "codex",
+  "title": "Bundle native voice runtimes in Windows releases",
+  "symptoms": [
+    "Bundle native voice runtimes in Windows releases"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-09-14",
+    "note": "自动采集自 codex#44922，尚未验证"
+  },
+  "aliases": [
+    "codex#44922"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/44922"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 0,
+    "created": "2026-09-11",
+    "body_excerpt": "Bundle native voice runtimes in Windows releases\n\n## Why\n\nWindows release packages need the voice helper and native audio libraries. Realtime TLS connections on fresh Windows installations also need platform certificate validation so Windows can retrieve missing trusted roots on demand.\n\n## What changed\n\n- Build and sign the voice helper and audio DLLs for Windows x64 and ARM64, bundle a pinned Microsoft CRT DLL, and verify signatures and runtime receipts before packaging.\n- Add verified, pinned Cygwin and native build tools plus MSVC linker, compiler, and path handling fixes for the Windows Bazel builds.\n- Include voice resources in primary release archives and WinGet packages. Preserve WinGet executable names, update manifest hashes, and recognize the package root through matching entrypoint metadata. Keep Python runtime wheels voice-free to preserve their existing Windows support floor.\n- Use Windows platform TLS validation for realtime WebSockets when no custom CA bundle is configured, preserving custom CA behavior.\n\n## Testing\n\nAdd coverage for build-input integrity and unsafe paths, signed Windows runtime assembly, WinGet file and hash preservation, package discovery, and TLS"
+  }
+}

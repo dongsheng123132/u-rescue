@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.add-worktree-session-creation-to-the-agents-over",
+  "tool": "codex",
+  "title": "Add worktree session creation to the agents overview",
+  "symptoms": [
+    "Add worktree session creation to the agents overview"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-09-14",
+    "note": "自动采集自 codex#45276，尚未验证"
+  },
+  "aliases": [
+    "codex#45276"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/45276"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-09-13",
+    "body_excerpt": "Add worktree session creation to the agents overview\n\n## What changed\n\n- Add a configurable `new_worktree` action, bound to `w`, for local sessions with worktree support enabled.\n- Create the worktree from the cached project default branch, preferring remote `HEAD` and falling back to conventional `main` or `master` refs without fetching. Preserve the selected subdirectory and source checkout edits.\n- Start and bind a blank session in the new worktree, preserving the selected approval reviewer without sending an initial turn.\n- Show creation progress, pause conflicting actions, clean up unclaimed clean worktrees, and report retained checkout paths when session startup fails. Clear pending creation state on reconnect.\n\n## Testing\n\nAdd coverage for default-branch selection, source checkout preservation, session ownership and approval settings, cleanup, startup failures, reconnect state, and busy-state rendering. Extend Git environment isolation coverage and test unrelated non-UTF-8 refs.\n\n<!-- copyberry-projection-id: ff1db5fa295d3b535c8aff7331b96d28cd70d6bd4dcd2f65ed09f2638bb03781 -->"
+  }
+}
