@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.preserve-startup-drafts-and-submit-them-when-the",
+  "tool": "codex",
+  "title": "Preserve startup drafts and submit them when the session is ready",
+  "symptoms": [
+    "Preserve startup drafts and submit them when the session is ready"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-09-21",
+    "note": "自动采集自 codex#46750，尚未验证"
+  },
+  "aliases": [
+    "codex#46750"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/46750"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-09-20",
+    "body_excerpt": "Preserve startup drafts and submit them when the session is ready\n\n## Why\n\nThe startup composer accepted edits but ignored submission. Its first frame also preceded configured screen settings, and startup failures could leave typed text unavailable.\n\n## What changed\n\n- Honor configured submit bindings during startup, retaining one confirmation until the session and protected input screens are ready. Repeated submit keys do not duplicate the message; edits, `Esc`, disconnects, or destination changes cancel confirmation while preserving the draft.\n- Apply local screen, status-line, keymap, and paste settings before the first editable frame. Anchor the composer at the bottom in owned-screen mode and retain the loading frame until resumed history is ready to render.\n- Keep an in-memory recovery copy through submission acknowledgment. On startup failure, restore the terminal before printing unsent text, expanding paste placeholders and escaping terminal control characters.\n\n## Testing\n\nAdd regression coverage for deferred single submission, configured key chords, cancellation, protected input, paste handling, draft recovery, initial screen settings, and loading-frame handoff, plus a sta"
+  }
+}

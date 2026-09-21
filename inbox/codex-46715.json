@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.split-shell-snapshot-credential-tests-into-focus",
+  "tool": "codex",
+  "title": "Split shell snapshot credential tests into focused cases",
+  "symptoms": [
+    "Split shell snapshot credential tests into focused cases"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-09-21",
+    "note": "自动采集自 codex#46715，尚未验证"
+  },
+  "aliases": [
+    "codex#46715"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/46715"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 1,
+    "created": "2026-09-19",
+    "body_excerpt": "Split shell snapshot credential tests into focused cases\n\n## What changed\n\nExtract shared proxy setup into `credential_snapshot_proxy()` and split POSIX startup protection and inherited credential alias checks into separate tests, each with its own temporary directory and proxy. Preserve the existing assertions.\n\n<!-- copyberry-projection-id: bd748b56939065b4dc10c7c0a1b3aa9177aa731335dce33006ad841ed48ba0c1 -->"
+  }
+}
