@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.fall-back-to-embedded-mode-under-restrictive-win",
+  "tool": "codex",
+  "title": "Fall back to embedded mode under restrictive Windows launchers",
+  "symptoms": [
+    "Fall back to embedded mode under restrictive Windows launchers"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-09-28",
+    "note": "自动采集自 codex#48491，尚未验证"
+  },
+  "aliases": [
+    "codex#48491"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/48491"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-09-26",
+    "body_excerpt": "Fall back to embedded mode under restrictive Windows launchers\n\n## Why\n\nWindows launchers such as `cargo run` can prevent background processes from outliving them, causing automatic daemon startup to fail and blocking the CLI from opening.\n\n## What changed\n\n- Classify detached launch restrictions by retrying an access-denied launch probe without the job breakaway flag. Keep both probes suspended and terminate and reap successful probes.\n- Use the embedded server with a visible warning when automatic startup encounters this restriction. Preserve errors for other launch failures, including inaccessible executables and elevated startup.\n- Keep explicit daemon lifecycle operations failing on the restriction, with guidance to build and run `codex.exe` directly.\n\n## Testing\n\nAdd Windows coverage for restriction classification and executable access failures, plus a CLI integration test and warning snapshot for embedded fallback under a restrictive job. The integration test also checks that elevated startup still fails and no daemon PID file is created.\n\n<!-- copyberry-projection-id: 652cd003c508358059cca2a3cf2a94c28b51a532cfe48145448a34b4eea14c40 -->"
+  }
+}

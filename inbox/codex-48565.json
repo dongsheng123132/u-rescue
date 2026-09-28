@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.allow-macos-tls-trust-evaluation-in-network-enab",
+  "tool": "codex",
+  "title": "Allow macOS TLS trust evaluation in network-enabled Seatbelt profiles",
+  "symptoms": [
+    "Allow macOS TLS trust evaluation in network-enabled Seatbelt profiles"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-09-28",
+    "note": "自动采集自 codex#48565，尚未验证"
+  },
+  "aliases": [
+    "codex#48565"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/48565"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 0,
+    "created": "2026-09-26",
+    "body_excerpt": "Allow macOS TLS trust evaluation in network-enabled Seatbelt profiles\n\n## Why\n\nSystem libcurl needs access to `com.apple.TrustEvaluationAgent` for TLS, but Seatbelt network profiles did not allow lookup of this service.\n\n## What changed\n\nAllow `mach-lookup` for this service when unrestricted networking is enabled or a restricted profile permits proxy ports or local binding. Keep access denied for network-disabled, Unix-socket-only, and managed profiles without usable endpoints.\n\n## Testing\n\nAdd macOS regression tests that apply Seatbelt policies and check trust-service access and loopback connections without external network dependencies. Cover managed-network overrides and verify that unrelated service lookups and connections to unapproved ports remain denied.\n\n<!-- copyberry-projection-id: e963cf14423a372dc39682a68a1b6f5a75e8ea256b2b913cd2e93a73f6dd3f34 -->"
+  }
+}
