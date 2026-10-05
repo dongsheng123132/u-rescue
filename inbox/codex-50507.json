@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.record-windows-sandbox-service-stop-diagnostics",
+  "tool": "codex",
+  "title": "Record Windows sandbox service stop diagnostics",
+  "symptoms": [
+    "Record Windows sandbox service stop diagnostics"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-10-05",
+    "note": "自动采集自 codex#50507，尚未验证"
+  },
+  "aliases": [
+    "codex#50507"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/50507"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 1,
+    "created": "2026-10-03",
+    "body_excerpt": "Record Windows sandbox service stop diagnostics\n\n## What changed\n\nPersist the service's last reported lifecycle reason and numeric HRESULT in the existing service registry key. Distinguish requested stops, shutdown, owner removal, startup failure, broker failure, and interrupted registration, and reset the record on startup. Recording is best-effort and does not affect the service lifecycle.\n\nEmit `codex.windows_sandbox.service_stopped` when a provisioning client observes a stopped service, including the recorded reason, HRESULT, and Windows service exit codes. Recheck the service status and registry record before emitting to avoid pairing inconsistent evidence during a concurrent restart. The metric counts observations, not unique outages; the recorded reason is advisory.\n\nUpdate the cached service status only after `SetServiceStatus` succeeds. Extract diagnostic error codes from typed errors without collecting error text or user data.\n\n## Testing\n\nAdd a test covering Win32-to-HRESULT conversion, preservation of Windows HRESULTs through error context, and a zero fallback for untyped error text.\n\n<!-- copyberry-projection-id: 26a3c6525cd91d3f518128415b7e335703056adaff874f8790e24996"
+  }
+}

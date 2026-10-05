@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.include-installer-stderr-in-daemon-update-failur",
+  "tool": "codex",
+  "title": "Include installer stderr in daemon update failures",
+  "symptoms": [
+    "Include installer stderr in daemon update failures"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-10-05",
+    "note": "自动采集自 codex#50499，尚未验证"
+  },
+  "aliases": [
+    "codex#50499"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/50499"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 1,
+    "created": "2026-10-03",
+    "body_excerpt": "Include installer stderr in daemon update failures\n\n## Why\n\nDaemon updates discard installer stderr, leaving failed installs with only an exit status and no installer diagnostics.\n\n## What changed\n\nCapture the last 2 KiB of installer stderr and append it to errors when the installer exits unsuccessfully. Drain stderr concurrently and wait at most one second after failure so subprocesses holding the pipe open cannot delay error reporting indefinitely. Keep captured details within the manual update response limit, and configure PowerShell output as UTF-8 to preserve non-ASCII diagnostics.\n\n## Testing\n\nAdd coverage for stderr tail truncation, bounded draining when a subprocess keeps stderr open, and manual update responses containing heavily escaped diagnostics. Extend the Windows installer test to check non-ASCII error text.\n\n<!-- copyberry-projection-id: b1d272e0be974d65ae7eb05a5e0d75dd7251afcf3e065512cef8ca21c08a63ef -->"
+  }
+}

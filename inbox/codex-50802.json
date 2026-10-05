@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.fall-back-to-mklink-when-windows-daemon-junction",
+  "tool": "codex",
+  "title": "Fall back to mklink when Windows daemon junction updates are denied",
+  "symptoms": [
+    "Fall back to mklink when Windows daemon junction updates are denied"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-10-05",
+    "note": "自动采集自 codex#50802，尚未验证"
+  },
+  "aliases": [
+    "codex#50802"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/50802"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 1,
+    "created": "2026-10-04",
+    "body_excerpt": "Fall back to mklink when Windows daemon junction updates are denied\n\n## Why\n\nSome Windows policies deny in-process reparse-point mutation while allowing the system junction creator, preventing managed daemon release selection.\n\n## What changed\n\nFall back to `cmd.exe` with `mklink /J` when native junction creation or retargeting returns `PermissionDenied`. Pass quoted paths through environment variables and disable delayed expansion to handle shell metacharacters.\n\nCreate the replacement junction before moving the existing `current` junction aside, and attempt to restore the previous junction if installation fails. Preserve it for recovery if restoration also fails.\n\n## Testing\n\nExtend the Windows junction test to cover fallback creation, native retargeting, and fallback replacement under a path containing spaces, `&`, `%`, and `!`, while verifying that no standalone CLI installation is created.\n\n<!-- copyberry-projection-id: 6b50bda81b81c83a506992a3b83d01c742192e1aada949307eb58e403e81ad45 -->"
+  }
+}

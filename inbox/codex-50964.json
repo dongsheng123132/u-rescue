@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.track-inference-tool-changes-in-turn-analytics",
+  "tool": "codex",
+  "title": "Track inference tool changes in turn analytics",
+  "symptoms": [
+    "Track inference tool changes in turn analytics"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-10-05",
+    "note": "自动采集自 codex#50964，尚未验证"
+  },
+  "aliases": [
+    "codex#50964"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/50964"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 0,
+    "reactions": 1,
+    "created": "2026-10-04",
+    "body_excerpt": "Track inference tool changes in turn analytics\n\n## What changed\n\nAdd `tools_change_count` to turn profiles and turn analytics events. Compare the full model-visible tool list before each sampling request, retaining the previous list across turns and connection resets. The first list establishes a baseline; subsequent changes increment the current turn's count.\n\n## Testing\n\nAdd coverage for schema changes, tool additions, ordering changes, empty lists, and tracking across sessions and transport fallback. Extend the turn event serialization test to include `tools_change_count`.\n\n<!-- copyberry-projection-id: 66bed7a3134b6a6ad94bd557c2ba32f6e3d367122bea651f3fb3a78844442cad -->"
+  }
+}
