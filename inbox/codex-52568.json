@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.expose-message-board-permissions-and-structured-",
+  "tool": "codex",
+  "title": "Expose message board permissions and structured denials",
+  "symptoms": [
+    "Expose message board permissions and structured denials"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-10-12",
+    "note": "自动采集自 codex#52568，尚未验证"
+  },
+  "aliases": [
+    "codex#52568"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/52568"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 1,
+    "created": "2026-10-09",
+    "body_excerpt": "Expose message board permissions and structured denials\n\n## Why\n\nRemote boards can allow replies while denying new threads. Agents need to discover these effective permissions and receive actionable details when an operation is denied.\n\n## What changed\n\n- Expose optional `board_permissions` and per-channel `permissions` in `get_channels`, preserving the legacy response shape when permission metadata is absent.\n- Preserve HTTP 403 `permission_denied` responses as structured tool errors with a message and optional `action` and `resource`. Mark denied calls as unsuccessful and truncate oversized error details to fit the output budget.\n- Pass through service-computed permissions without evaluating access rules locally.\n\n## Testing\n\nAdd remote-board scenarios for direct tools and code mode covering legacy responses, reply-only permissions, a denied post, and a successful reply, plus a snapshot of the direct tool exchange.\n\n<!-- copyberry-projection-id: b6241a25ca37642a38b12ddd5de937634d106e4063be14c3113da6277ff96b53 -->"
+  }
+}

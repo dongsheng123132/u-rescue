@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.prevent-brokered-credential-aliases-from-bypassi",
+  "tool": "codex",
+  "title": "Prevent brokered credential aliases from bypassing MITM hooks",
+  "symptoms": [
+    "Prevent brokered credential aliases from bypassing MITM hooks"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-10-12",
+    "note": "自动采集自 codex#52661，尚未验证"
+  },
+  "aliases": [
+    "codex#52661"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/52661"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 1,
+    "created": "2026-10-09",
+    "body_excerpt": "Prevent brokered credential aliases from bypassing MITM hooks\n\n## Why\n\nA credential bound to a host with MITM hooks could also be used at an alias without hooks, allowing the proxy to inject the real credential without enforcing hook policy.\n\n## What changed\n\nReject requests to unhooked aliases when their selected brokered credentials are also bound to a hooked host. Check both HTTP forwarding and MITM requests before replacing dummy credentials, returning `403` with `blocked-by-mitm-hook` for denied requests.\n\nUse the same destination and credential-selection rules for alias checks and injection, including configured URL prefixes, safe paths, equivalent credentials, merged Basic authentication fields, and environment scope.\n\n## Testing\n\nAdd regression coverage for built-in and configured provider aliases, IPv6 destinations, credential selection, and unrelated credentials. Add an agent-started proxy test that verifies credential masking and alias denial.\n\n<!-- copyberry-projection-id: 3cb385ccb21cca7d0b6620cb7cedb6ca63f449fbd5b7a458a748bf0315b24261 -->"
+  }
+}

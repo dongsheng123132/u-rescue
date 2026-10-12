@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.classify-voice-session-failures-and-record-termi",
+  "tool": "codex",
+  "title": "Classify voice session failures and record terminal outcomes",
+  "symptoms": [
+    "Classify voice session failures and record terminal outcomes"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-10-12",
+    "note": "自动采集自 codex#52756，尚未验证"
+  },
+  "aliases": [
+    "codex#52756"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/52756"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 2,
+    "reactions": 1,
+    "created": "2026-10-10",
+    "body_excerpt": "Classify voice session failures and record terminal outcomes\n\n## Why\n\nVoice failure metrics lacked cause and lifecycle phase, and session durations were recorded before the final outcome was known. A failed control send could also overwrite a more specific WebRTC error.\n\n## What changed\n\n- Tag `codex.voice.session.failure` with bounded `cause` and `phase` values, recording at most one failure per session.\n- Capture duration when stopping and emit `codex.voice.session.duration` at cleanup with a `success` or `failure` outcome.\n- Carry typed WebRTC errors into the TUI, preserve existing errors when control sends fail, and avoid duplicate errors after startup failure.\n- Record app-server disconnect failures for background voice sessions as well as the visible session.\n\n## Testing\n\nAdd coverage for terminal outcome and failure metric attributes, preservation of specific startup and audio-session errors, and startup failures without duplicate control-channel errors.\n\n<!-- copyberry-projection-id: ea4b75f6686a25760a792f398b9542dbd395e5527233a7cf960ac235dbd9c933 -->"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.align-linux-sandbox-names-and-docs-with-bubblewr",
+  "tool": "codex",
+  "title": "Align Linux sandbox names and docs with bubblewrap and seccomp",
+  "symptoms": [
+    "Align Linux sandbox names and docs with bubblewrap and seccomp"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-10-12",
+    "note": "自动采集自 codex#52610，尚未验证"
+  },
+  "aliases": [
+    "codex#52610"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/52610"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 1,
+    "created": "2026-10-09",
+    "body_excerpt": "Align Linux sandbox names and docs with bubblewrap and seccomp\n\n## Why\n\nThe Linux sandbox uses bubblewrap for filesystem isolation and seccomp for syscall filtering, but its command type, syscall-filter module, and integration test suite still used Landlock names.\n\n## What changed\n\n- Rename `LandlockCommand` to `LinuxSandboxCommand`, `src/landlock.rs` to `src/seccomp.rs`, and `tests/suite/landlock.rs` to `tests/suite/sandbox.rs`, updating imports and existing tests.\n- Clarify the retained legacy Landlock implementation and its filesystem-policy limitations.\n- Update the README to describe existing network filtering, `AF_VSOCK` and `io_uring` restrictions, and managed-proxy Unix socket behavior, including allowed Unix socket pairs.\n\nSandbox enforcement behavior is unchanged.\n\n<!-- copyberry-projection-id: cf2a1feef029accb9077c09a830aa5a14ed2cb45ae8d22aed0cb4b9044cc1e0e -->"
+  }
+}
