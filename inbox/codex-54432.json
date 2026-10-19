@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.support-remote-credential-masking-with-zsh-shell",
+  "tool": "codex",
+  "title": "Support remote credential masking with Zsh shell snapshots",
+  "symptoms": [
+    "Support remote credential masking with Zsh shell snapshots"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-10-19",
+    "note": "自动采集自 codex#54432，尚未验证"
+  },
+  "aliases": [
+    "codex#54432"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/54432"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 1,
+    "created": "2026-10-15",
+    "body_excerpt": "Support remote credential masking with Zsh shell snapshots\n\n## Why\n\nRemote credential masking previously supported only Bash commands without login startup or shell snapshots, leaving Zsh commands with unmasked credentials.\n\n## What changed\n\n- Enable masking for Zsh login commands using shell snapshots on Linux and macOS.\n- Capture trusted startup profiles per launch, bind the credential broker to the resulting environment, and replace credentials and supported aliases with placeholders before snapshot replay.\n- Preserve explicit environment overrides, credential unsets, and launcher-managed proxy settings during replay.\n- Warn and fall back to unmasked startup when a snapshot cannot safely replay credentials; stop execution if protected snapshot restoration fails.\n\n## Testing\n\nExtend remote execution tests for inherited and profile-defined credentials, overrides, destination changes, and unsupported-profile fallback. Add a Zsh scenario snapshot showing a credential placeholder in command output.\n\n<!-- copyberry-projection-id: 9188e421054fc6b09646e4620745be402837a585d2da65dd0f1c3ab3e6a35e92 -->"
+  }
+}
