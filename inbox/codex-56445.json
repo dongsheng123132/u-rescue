@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.treat-model-not-found-provider-errors-as-termina",
+  "tool": "codex",
+  "title": "Treat model-not-found provider errors as terminal failures",
+  "symptoms": [
+    "Treat model-not-found provider errors as terminal failures"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-10-26",
+    "note": "自动采集自 codex#56445，尚未验证"
+  },
+  "aliases": [
+    "codex#56445"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/56445"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 0,
+    "created": "2026-10-23",
+    "body_excerpt": "Treat model-not-found provider errors as terminal failures\n\n## Why\n\nProvider errors with code `model_not_found` should end the turn immediately and preserve the provider's message instead of triggering retries.\n\n## What changed\n\n- Recognize `model_not_found` in HTTP 400, 403, and 404 responses and in streamed `error` and `response.failed` events.\n- Preserve the provider message and any available HTTP status, and expose `modelNotFound` through the app-server protocol and generated schemas and SDK types.\n\n## Testing\n\nAdd coverage for HTTP classification, statusless stream errors, and terminal failures without retries across HTTP, SSE, and WebSocket responses. Verify that `thread/read` preserves the error reported by the live notification.\n\n<!-- copyberry-projection-id: 8ccff213ecd6c24a00d55d7b7e2cd20260657f93773e5d48e96a674c13497922 -->"
+  }
+}

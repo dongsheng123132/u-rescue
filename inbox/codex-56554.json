@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.enable-masked-aws-credentials-for-local-proxy-si",
+  "tool": "codex",
+  "title": "Enable masked AWS credentials for local proxy signing",
+  "symptoms": [
+    "Enable masked AWS credentials for local proxy signing"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-10-26",
+    "note": "自动采集自 codex#56554，尚未验证"
+  },
+  "aliases": [
+    "codex#56554"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/56554"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 1,
+    "created": "2026-10-23",
+    "body_excerpt": "Enable masked AWS credentials for local proxy signing\n\n## What changed\n\n- Expose `aws_sigv4` actions in version 2 MITM permissions configuration and the config schema, rejecting multiple signing actions per hook.\n- Give local managed commands placeholder AWS credentials for the selected signing pair, and mask configured credentials in environment values and protected shell snapshots.\n- Set `AWS_CA_BUNDLE` to the managed proxy CA bundle when unset, and require `features.credential_masking` for local AWS signing hooks.\n- Validate placeholders against every configured signing pair to prevent overlap with real credentials.\n\n## Testing\n\nExtend configuration, signing, and TLS forwarding tests to cover action resolution, invalid signing configuration, credential masking, CA trust, snapshot protection, and exclusion of local AWS defaults from remote environments.\n\n<!-- copyberry-projection-id: 5050e42e653ab072492a0588de55c8a0e072a5ac8fe660f35b211bb7cb1c2f53 -->"
+  }
+}
