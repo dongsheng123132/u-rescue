@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.allow-apps-catalog-discovery-before-the-initial-",
+  "tool": "codex",
+  "title": "Allow Apps catalog discovery before the initial tool inventory completes",
+  "symptoms": [
+    "Allow Apps catalog discovery before the initial tool inventory completes"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-11-02",
+    "note": "自动采集自 codex#58352，尚未验证"
+  },
+  "aliases": [
+    "codex#58352"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/58352"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 2,
+    "reactions": 0,
+    "created": "2026-10-30",
+    "body_excerpt": "Allow Apps catalog discovery before the initial tool inventory completes\n\n## Why\n\nPlugin and skill catalog reads currently wait for the Apps server's initial `tools/list` to finish, even after its MCP transport is initialized.\n\n## What changed\n\nAdd the disabled-by-default `features.apps_early_resource_discovery` flag. When enabled, host-owned Apps requests for `mcp/plugin` and `mcp/skill` resources can use the initialized transport while the initial tool inventory is pending. Server readiness still waits for the inventory to complete, and retries use normal readiness.\n\nBound early client acquisition by the configured startup timeout, propagate startup failures and cancellation, and reject pages if the connection, authentication scope, or resource cache generation changes during discovery.\n\n## Testing\n\nAdd coverage for gated discovery, concurrent plugin and skill reads, startup timeouts and failures, cancellation, cache invalidation, and account switches. Verify that early discovery reuses a single handshake and tool inventory, including with the newer MCP protocol and connection sharing enabled.\n\n<!-- copyberry-projection-id: 4f4b852163d35c837e33dfbf06873205e9ae69901bfff8f81192ebe1"
+  }
+}

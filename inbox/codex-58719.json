@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.wire-native-voice-dependencies-into-full-rust-ci",
+  "tool": "codex",
+  "title": "Wire native voice dependencies into full Rust CI",
+  "symptoms": [
+    "Wire native voice dependencies into full Rust CI"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-11-02",
+    "note": "自动采集自 codex#58719，尚未验证"
+  },
+  "aliases": [
+    "codex#58719"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/58719"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 2,
+    "reactions": 1,
+    "created": "2026-11-01",
+    "body_excerpt": "Wire native voice dependencies into full Rust CI\n\n## What changed\n\n- Build native voice SDK and runtime artifacts with Bazel for Linux GNU, macOS, and Windows on x64 and ARM64, then configure Cargo jobs to consume them. Keep musl builds in a separate job without these inputs.\n- Validate artifact receipts against the target, source commit, and source manifest; verify SDK file hashes and relocate pkg-config metadata. Package the runtime and plugins with nextest archives and restore `CODEX_TEST_VOICE_RUNTIME` when running shards.\n- Prepare native Windows voice tools for argument-comment linting and install ARM64 DotSlash on Windows ARM64. Reduce archive disk usage, bound Linux ARM64 build concurrency, and correct the JUnit artifact path.\n- Recognize TLS errors wrapped directly in `io::Error`. Make TLS fallback fixtures select the native backend explicitly, allow the MCP test server's non-loopback address, and isolate skill-root tests from ancestor Git markers. Install `git` in remote test containers and filter MCP discovery assertions to POST requests.\n\n## Testing\n\nAdd tests for relocated voice inputs, Windows ARM64 import libraries with host-native pkgconf, and rejection of mismatche"
+  }
+}
