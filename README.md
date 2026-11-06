@@ -1,5 +1,7 @@
 # U-Rescue · AI 工具故障病例库
 
+作者 / Author：贺去病（贺方升 / Dosen）· [hequbing.com](https://www.hequbing.com)
+
 > Codex / Claude Code 装不上、连不上、报错了怎么修。
 > 每条病例都写清楚：**什么症状 → 为什么 → 怎么修 → 怎么撤回 → 怎么验证真修好了。**
 
