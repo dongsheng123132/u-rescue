@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.stop-retrying-terminal-runtime-authentication-de",
+  "tool": "codex",
+  "title": "Stop retrying terminal runtime authentication denials",
+  "symptoms": [
+    "Stop retrying terminal runtime authentication denials"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-11-09",
+    "note": "自动采集自 codex#60096，尚未验证"
+  },
+  "aliases": [
+    "codex#60096"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/60096"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 0,
+    "created": "2026-11-07",
+    "body_excerpt": "Stop retrying terminal runtime authentication denials\n\n## Why\n\nInvalid assertions and paused or revoked runtime instances cannot recover through request retries or credential refresh. Permanent refresh-token failures also need to retain their sign-in error instead of becoming retryable stream errors.\n\n## What changed\n\n- Recognize terminal runtime denial codes in `401` and `403` response bodies and identity error headers, preserving HTTP diagnostics while stopping retries.\n- Skip credential recovery for runtime denials in runtime-enabled model providers and backend requests, while preserving recovery for ordinary credential expiration.\n- Propagate permanent refresh-token failures through runtime authentication as `RefreshTokenFailed` errors.\n\n## Testing\n\nAdd coverage for body and header denials, preserved HTTP diagnostics, provider-scoped credential recovery, and cached permanent refresh failures. Complete-turn tests verify that runtime denials stop without retries or refreshes while expired credentials recover in both runtime authentication modes.\n\n<!-- copyberry-projection-id: c0c9796142601af2841a1ba4d7da972e0bc2a25d088a4c4171c93891c49fc784 -->"
+  }
+}
