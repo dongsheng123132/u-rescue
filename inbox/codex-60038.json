@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.surface-mcp-server-startup-errors-when-preparing",
+  "tool": "codex",
+  "title": "Surface MCP server startup errors when preparing cached tool calls",
+  "symptoms": [
+    "Surface MCP server startup errors when preparing cached tool calls"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-11-09",
+    "note": "自动采集自 codex#60038，尚未验证"
+  },
+  "aliases": [
+    "codex#60038"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/60038"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 0,
+    "created": "2026-11-07",
+    "body_excerpt": "Surface MCP server startup errors when preparing cached tool calls\n\n## Why\n\nA cached MCP tool can remain advertised after its server fails to start. Calling it previously returned a generic unavailable-tool error, hiding the startup failure from the model.\n\n## What changed\n\nPropagate preparation errors through MCP tool calls and recorded approval preparation, preserving the error chain and adding the server name to startup failures. Keep the unavailable-tool error for tools that are missing, filtered, or no longer visible to the model.\n\n## Testing\n\nUpdate the executor capability downgrade test to require the credential resolution startup error in the model's tool output and assert that the host token is absent.\n\n<!-- copyberry-projection-id: 309f0ffa9759c800ad0553cfe3de428107ec4e842e9bc934f23cec75819e2cb6 -->"
+  }
+}

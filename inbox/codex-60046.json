@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.derive-mcp-network-policy-and-preserve-saved-den",
+  "tool": "codex",
+  "title": "Derive MCP network policy and preserve saved denials",
+  "symptoms": [
+    "Derive MCP network policy and preserve saved denials"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-11-09",
+    "note": "自动采集自 codex#60046，尚未验证"
+  },
+  "aliases": [
+    "codex#60046"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/60046"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 1,
+    "created": "2026-11-07",
+    "body_excerpt": "Derive MCP network policy and preserve saved denials\n\n## Why\n\nStale saved grants or malformed rules can cause valid network denials to be discarded. A failed rule write can also leave the in-memory policy inconsistent with native enforcement.\n\n## What changed\n\n- Add a helper to derive MCP network policy from controller and environment policies, permission profiles, approval settings, and saved rules. Preserve managed restrictions and conservatively deny traffic that requires review, request hooks, or DNS checks the metadata cannot express.\n- Retain valid saved denials when grants violate managed constraints or a rule batch is malformed.\n- Serialize runtime updates and persistence, publishing denials before the write so they remain effective if saving fails. Publish saved grants after a successful write.\n- Extract validation of listener settings for running proxy updates.\n\n## Testing\n\nAdd coverage for policy composition, mixed-executor local binding, native proxy denial parity, stale grants, malformed denials, failed persistence, and compatibility with trusted MCP servers without policy negotiation support.\n\n<!-- copyberry-projection-id: 48018976aacf38a292bb7e9a9da124d657d5eab61ab10"
+  }
+}
