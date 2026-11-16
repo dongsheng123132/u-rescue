@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.refresh-cloud-plugin-and-skill-catalogs-during-s",
+  "tool": "codex",
+  "title": "Refresh cloud plugin and skill catalogs during step preparation",
+  "symptoms": [
+    "Refresh cloud plugin and skill catalogs during step preparation"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-11-16",
+    "note": "自动采集自 codex#61429，尚未验证"
+  },
+  "aliases": [
+    "codex#61429"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/61429"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 2,
+    "reactions": 1,
+    "created": "2026-11-14",
+    "body_excerpt": "Refresh cloud plugin and skill catalogs during step preparation\n\n## Why\n\nInstalling a plugin without connector tools must still refresh a cached cloud skill catalog so its skills are visible to the next inference.\n\n## What changed\n\n- Rely on step preparation for cloud plugin and skill discovery, removing their turn-start callbacks and the `requires_mcp_runtime` lifecycle hook.\n- Request an MCP runtime refresh after every completed plugin install, including skills-only installs.\n\n## Testing\n\nAdd regression coverage for skills becoming visible immediately after a connector-free install. Update lifecycle tests to cover discovery after MCP reconciliation, prewarm skipping discovery, cancellation allowing subsequent preparation, and reuse of unchanged connections. Use deterministic DNS lookups in network proxy authorization tests.\n\n<!-- copyberry-projection-id: b8c4feb97ab82eb50acb89c27da5b066e629ba1826a053eaaffdb132e0d812a1 -->"
+  }
+}
