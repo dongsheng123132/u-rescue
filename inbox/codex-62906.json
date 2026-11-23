@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.report-http-mcp-startup-problems-clearly-in-code",
+  "tool": "codex",
+  "title": "Report HTTP MCP startup problems clearly in codex exec",
+  "symptoms": [
+    "Report HTTP MCP startup problems clearly in codex exec"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-11-23",
+    "note": "自动采集自 codex#62906，尚未验证"
+  },
+  "aliases": [
+    "codex#62906"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/62906"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 1,
+    "created": "2026-11-21",
+    "body_excerpt": "Report HTTP MCP startup problems clearly in codex exec\n\n## Why\n\nLow-level transport errors can clutter stderr and include endpoint\nURLs with credentials. An optional HTTP MCP server can also still be\nstarting when its tools are omitted from a turn.\n\n## What changed\n\n- Warn once per Streamable HTTP connection when startup fails or the\n  server is omitted from the turn because startup is still pending.\n  Include the server name and a short reason without the raw transport\n  error.\n- Filter redundant MCP worker errors from default `codex exec` stderr\n  and preserve caller control through `RUST_LOG`.\n- Add server context to errors when startup blocks a tool call or\n  resource operation, when a tool call finds a disconnected server,\n  or when HTTP session recovery fails.\n\n## Testing\n\nAdd regression coverage for startup warnings, credential omission,\nexplicit `RUST_LOG` diagnostics, and an optional server that becomes\nready in time to be included in the turn.\n\n<!-- copyberry-projection-id: ec902ab974baf64a892d40af1450e9059d7c7732afe2ffa4fc1b6b5eb6724c4f -->"
+  }
+}

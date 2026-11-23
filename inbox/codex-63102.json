@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.show-a-loading-indicator-while-the-resume-picker",
+  "tool": "codex",
+  "title": "Show a loading indicator while the resume picker starts",
+  "symptoms": [
+    "Show a loading indicator while the resume picker starts"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-11-23",
+    "note": "自动采集自 codex#63102，尚未验证"
+  },
+  "aliases": [
+    "codex#63102"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/63102"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 1,
+    "created": "2026-11-22",
+    "body_excerpt": "Show a loading indicator while the resume picker starts\n\n## Why\n\n`codex resume` can wait for the app server connection and login status\nbefore the session picker opens, leaving the terminal blank while they wait.\n\n## What changed\n\nDisplay “Loading sessions…” during startup using the same styling as the\npicker. Clear the inline indicator after the login status check or when\nstartup fails or is canceled.\n\n## Testing\n\nAdd a terminal test that holds open a Unix socket to stall the connection,\nchecks that `codex resume --no-alt-screen` displays the loading indicator,\nthen closes the socket and verifies that the error replaces the indicator.\n\n<!-- copyberry-projection-id: cebb8746ef92590bf80b743cec42002351fc255cf29c8a06b837ff56a6822be2 -->"
+  }
+}

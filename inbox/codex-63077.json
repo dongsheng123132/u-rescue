@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.share-truncation-logic-for-environment-startup-e",
+  "tool": "codex",
+  "title": "Share truncation logic for environment startup errors",
+  "symptoms": [
+    "Share truncation logic for environment startup errors"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-11-23",
+    "note": "自动采集自 codex#63077，尚未验证"
+  },
+  "aliases": [
+    "codex#63077"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/63077"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 1,
+    "created": "2026-11-22",
+    "body_excerpt": "Share truncation logic for environment startup errors\n\n## What changed\n\nUse `ErrorContextBudget` to truncate model-visible startup error details in\nenvironment world state and `wait_for_environment` responses. Keep the\nexisting 256-byte limit per detail and 512-byte total for world state error\ndetails, with truncation at UTF-8 character boundaries.\n\n## Testing\n\nExtend the world state test to cover a multibyte error that cannot fit in\nthe remaining budget, followed by an ASCII error that uses the last two bytes.\n\n<!-- copyberry-projection-id: 7ef93a71c6f4c57ae55b48d3ec58ee56a1d5aca365b268ae22414fb67ecd869f -->"
+  }
+}

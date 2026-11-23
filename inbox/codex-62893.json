@@ -1,0 +1,50 @@
+{
+  "_draft": true,
+  "_needs": [
+    "cause",
+    "fix.steps",
+    "fix.verify",
+    "platforms",
+    "severity",
+    "title(改成用户说得出口的话)"
+  ],
+  "id": "codex.TODO.broaden-legacy-fallback-for-mcp-discovery-over-h",
+  "tool": "codex",
+  "title": "Broaden legacy fallback for MCP discovery over HTTP",
+  "symptoms": [
+    "Broaden legacy fallback for MCP discovery over HTTP"
+  ],
+  "errors": [],
+  "platforms": [],
+  "severity": "major",
+  "cause": "TODO：写清楚机制。写不出机制就别收这条 —— 「可能是环境问题」不是病因。",
+  "fix": {
+    "steps": [
+      {
+        "desc": "TODO：填修复步骤。非只读的步骤必须写 rollback。",
+        "risk": "read-only"
+      }
+    ],
+    "verify": "TODO：怎么证明真修好了。命令退出码为 0 不算。",
+    "auto": false
+  },
+  "evidence": "reported",
+  "verified_on": {
+    "date": "2026-11-23",
+    "note": "自动采集自 codex#62893，尚未验证"
+  },
+  "aliases": [
+    "codex#62893"
+  ],
+  "sources": [
+    "https://github.com/openai/codex/pull/62893"
+  ],
+  "tags": [],
+  "_upstream": {
+    "state": "closed",
+    "comments": 1,
+    "reactions": 1,
+    "created": "2026-11-21",
+    "body_excerpt": "Broaden legacy fallback for MCP discovery over HTTP\n\n## Why\n\nLegacy MCP servers can reject `server/discover` before JSON-RPC dispatch\nbecause they require a session ID or reject the requested protocol version.\nTheir HTTP 400 response can be empty or lack a matching JSON-RPC request ID,\nleaving Codex unable to start the legacy handshake.\n\n## What changed\n\nRetry with a sessionless `initialize` when the initial sessionless\n`server/discover` receives HTTP 400 without an authentication challenge or\na JSON-RPC error code that requires validation. Preserve fallback for\nrecognized legacy rejections and give structured protocol version offers\nprecedence over error text. Once a server offers a modern version, surface\na rejected follow-up probe as a discovery failure.\n\n## Testing\n\nExtend mock-server coverage to verify that legacy fallback establishes a\nfresh session and uses it for `tools/list`. Cover authentication challenges,\nmalformed and uncorrelated JSON-RPC errors, and failures after a modern\nversion offer.\n\n<!-- copyberry-projection-id: 966c979eb556645f8fed41d3307cc4c7c8e0ab278a620ea3934a835d228be388 -->"
+  }
+}
